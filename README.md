@@ -20,8 +20,8 @@ liscences that you'll have to meet the requirements of.
 Those components are as follows: 
 Scripts and assets in the 3rd party folder weren't created by me and are bound by their own liscences.
 This includes Lidgren.Network, Detonator, and iTween.  The project also uses Vectrosity to generate the
-boundary circle. Since you actually have to buy vectrosity, it's not included in the project source. If you
-have vectrosity, you'll have to drop it into the 3rdParty\Vectrosity folder and uncomment the line 
+boundary circle. Since you actually have to buy vectrosity, it's not included in the project source. 
+If you have vectrosity, you'll have to drop it into the 3rdParty\Vectrosity folder and uncomment the line 
 "#define Use_Vectrosity" at the start of crabmanager.cs.
 
 The music and sounds I took from other sources, I would recommend not using them yourself!  
