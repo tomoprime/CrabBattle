@@ -1,4 +1,4 @@
-<h2>Welcome to Crab Game</h2>
+<h2>Welcome to the Crab Battle</h2>
 
 This codebase was initial submitted from Unity Forums. 
 
