@@ -90,7 +90,7 @@ namespace CrabBattleServer
 		private DateTime time, lastBeat, introtime;
 	    private TimeSpan timetopass, beatrate, introlength;
 	    private bool playintro = true;
-		
+		private bool isRunning;
 		private int gamePhase = 0;
 		private int playercount = 0;
 		private int beatnum = 0;
@@ -133,9 +133,17 @@ namespace CrabBattleServer
 			*/	
 		}
 		
+		public void StopServer()
+		{
+			isRunning = false;
+			if (server!=null)
+				server.Shutdown("Stopping Server");
+		}
+		
 		public void RunGameLoop ()
 		{
 			Console.WriteLine("Starting RunGameLoop Thread");
+			isRunning = true;
 			
 			if(playintro == false)
 	           introlength = new TimeSpan(0, 0, 3);
@@ -152,7 +160,7 @@ namespace CrabBattleServer
 		
 	        crab = new CrabBehavior();
             
-			while(true)
+			while(isRunning)
             {
                 //The gamestate stuff comes first because we drop a continue if no packet is recieved.
                 if (gamePhase != (int)GameState.Lobby && players.Count == 0)
@@ -231,8 +239,8 @@ namespace CrabBattleServer
                     beatnum++;
                     lastBeat = DateTime.Now;
                 }
-				// Add some delay to free up cpu
-				Thread.Sleep(25);
+				// Adjust delay to free up cpu as needed
+				Thread.Sleep(5);
 			}
 		}
 		

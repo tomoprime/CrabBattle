@@ -1,4 +1,6 @@
-﻿
+﻿using System;
+using System.Threading;
+
 namespace CrabBattleServer
 {
     class Program
@@ -15,7 +17,15 @@ namespace CrabBattleServer
         	policyport = int.Parse(args[1]);
         if (args.Length>2)
         	maxconnections = int.Parse(args[2]);
-            //Setup the policy server first.
+        
+			Console.WriteLine("Usage: CrabBattleServer.exe");
+			Console.WriteLine("       CrabBattleServer.exe srvport");
+			Console.WriteLine("       CrabBattleServer.exe srvport polyport");
+			Console.WriteLine("       CrabBattleServer.exe srvport polyport maxplayers\n");
+			Console.WriteLine("Hit ESC to exit");
+			Console.WriteLine("Example: CrabBattleServer.exe "+serverport+" "+policyport+" "+maxconnections+"\n");
+			
+			//Setup the policy server first.
             const string AllPolicy = @"<?xml version='1.0'?>"+
 										"<cross-domain-policy>" +
         								"	<allow-access-from domain='*' to-ports='*' />"+
@@ -27,7 +37,14 @@ namespace CrabBattleServer
 
             // start game server on non root port > 1023 and max connections 20
             GameServer gs = new	GameServer(serverport, maxconnections);
-			gs.StartServer();		
+			
+			gs.StartServer();
+			
+			while (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape)
+				Thread.Sleep(50);
+			
+			policyServer.Stop();
+			gs.StopServer();
     	}
     }
 }

@@ -115,7 +115,7 @@ public class NetworkManager : MonoBehaviour {
         }
         return Instance;
     }
-
+	
 	// Use this for initialization
 	void Start () 
     {
@@ -699,6 +699,8 @@ public class NetworkManager : MonoBehaviour {
             NetOutgoingMessage outmsg = client.CreateMessage();
             outmsg.Write((byte)PacketTypes.Disconnect);
             client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered);
+			client.Shutdown("Bye All");
+			print("Closing client connection...");
         }
     }
 }
