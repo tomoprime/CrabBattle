@@ -26,10 +26,11 @@ namespace CrabBattleServer
 			Console.WriteLine("Example: CrabBattleServer.exe "+serverport+" "+policyport+" "+maxconnections+"\n");
 			
 			//Setup the policy server first.
-            const string AllPolicy = @"<?xml version='1.0'?>"+
-										"<cross-domain-policy>" +
-        								"	<allow-access-from domain='*' to-ports='*' />"+
-										"</cross-domain-policy>";
+            const string AllPolicy =
+				@"<?xml version='1.0'?>"+
+					"<cross-domain-policy>" +
+					"	<allow-access-from domain='*' to-ports='*' />"+
+					"</cross-domain-policy>";
 			
 			// start policy server on non root port > 1023
             SocketPolicyServer policyServer = new SocketPolicyServer(AllPolicy, policyport);
