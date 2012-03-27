@@ -14,7 +14,8 @@ public class GameManager : MonoBehaviour {
 	public string scoreUrl = "http://www.dodsrv.com/crabbattle/scoresubmit.php";
 	
 	public string greeting = "You'll need to have at least one person running a multiplayer server in order to play. "+
-			"That player will need to forward ports 8843 & 14248 to their server. If you fail to connect by hostname you may need to specify the direct ipaddress. Otherwise use dodsrv.com or tomogames.com as given below.";
+			"That player will need to forward ports 8843 & 14248 to their server. If you fail to connect by hostname "+
+			"you may need to specify the direct ipaddress. Otherwise use dodsrv.com or tomogames.com as given below.";
 
 	
     public static GameManager GetInstance()

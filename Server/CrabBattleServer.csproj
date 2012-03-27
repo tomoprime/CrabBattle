@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C2059674-A7EC-4945-822E-E3252F5D3F1B}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CrabBattleServer</RootNamespace>
+    <AssemblyName>CrabBattleServer</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>C:\Users\dmcneill\Documents\Personal\CrabServerRelease\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>E7D84740389881BBB9EA90467439BC1E20E9D265</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>CrabBattleServer_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Xml.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Data.DataSetExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\System.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.CSharp">
+      <HintPath>..\..\..\..\..\Library\Frameworks\Mono.framework\Versions\Current\lib\mono\4.0\Mono.CSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CrabBehavior.cs" />
+    <Compile Include="Lidgren.Network\Encryption\INetEncryption.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetAESEncryption.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetBlockEncryptionBase.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetDESEncryption.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetRC2Encryption.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetTripleDESEncryption.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetXorEncryption.cs" />
+    <Compile Include="Lidgren.Network\Encryption\NetXteaEncryption.cs" />
+    <Compile Include="Lidgren.Network\NamespaceDoc.cs" />
+    <Compile Include="Lidgren.Network\NetBigInteger.cs" />
+    <Compile Include="Lidgren.Network\NetBitVector.cs" />
+    <Compile Include="Lidgren.Network\NetBitWriter.cs" />
+    <Compile Include="Lidgren.Network\NetClient.cs" />
+    <Compile Include="Lidgren.Network\NetConnection.cs" />
+    <Compile Include="Lidgren.Network\NetConnection.Handshake.cs" />
+    <Compile Include="Lidgren.Network\NetConnection.Latency.cs" />
+    <Compile Include="Lidgren.Network\NetConnection.MTU.cs" />
+    <Compile Include="Lidgren.Network\NetConnectionStatistics.cs" />
+    <Compile Include="Lidgren.Network\NetConnectionStatus.cs" />
+    <Compile Include="Lidgren.Network\NetConstants.cs" />
+    <Compile Include="Lidgren.Network\NetDeliveryMethod.cs" />
+    <Compile Include="Lidgren.Network\NetException.cs" />
+    <Compile Include="Lidgren.Network\NetFragmentationHelper.cs" />
+    <Compile Include="Lidgren.Network\NetFragmentationInfo.cs" />
+    <Compile Include="Lidgren.Network\NetIncomingMessage.cs" />
+    <Compile Include="Lidgren.Network\NetIncomingMessage.Peek.cs" />
+    <Compile Include="Lidgren.Network\NetIncomingMessage.Read.cs" />
+    <Compile Include="Lidgren.Network\NetIncomingMessage.Read.Reflection.cs" />
+    <Compile Include="Lidgren.Network\NetIncomingMessage.Write.cs" />
+    <Compile Include="Lidgren.Network\NetIncomingMessageType.cs" />
+    <Compile Include="Lidgren.Network\NetMessageType.cs" />
+    <Compile Include="Lidgren.Network\NetNatIntroduction.cs" />
+    <Compile Include="Lidgren.Network\NetOutgoingMessage.cs" />
+    <Compile Include="Lidgren.Network\NetOutgoingMessage.Write.cs" />
+    <Compile Include="Lidgren.Network\NetOutgoingMessage.Write.Reflection.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.Discovery.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.Fragmentation.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.Internal.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.LatencySimulation.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.Logging.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.MessagePools.cs" />
+    <Compile Include="Lidgren.Network\NetPeer.Send.cs" />
+    <Compile Include="Lidgren.Network\NetPeerConfiguration.cs" />
+    <Compile Include="Lidgren.Network\NetPeerStatistics.cs" />
+    <Compile Include="Lidgren.Network\NetPeerStatus.cs" />
+    <Compile Include="Lidgren.Network\NetQueue.cs" />
+    <Compile Include="Lidgren.Network\NetRandom.cs" />
+    <Compile Include="Lidgren.Network\NetReceiverChannelBase.cs" />
+    <Compile Include="Lidgren.Network\NetReliableOrderedReceiver.cs" />
+    <Compile Include="Lidgren.Network\NetReliableSenderChannel.cs" />
+    <Compile Include="Lidgren.Network\NetReliableSequencedReceiver.cs" />
+    <Compile Include="Lidgren.Network\NetReliableUnorderedReceiver.cs" />
+    <Compile Include="Lidgren.Network\NetSenderChannelBase.cs" />
+    <Compile Include="Lidgren.Network\NetSendResult.cs" />
+    <Compile Include="Lidgren.Network\NetServer.cs" />
+    <Compile Include="Lidgren.Network\NetSRP.cs" />
+    <Compile Include="Lidgren.Network\NetStoredReliableMessage.cs" />
+    <Compile Include="Lidgren.Network\NetTime.cs" />
+    <Compile Include="Lidgren.Network\NetTuple.cs" />
+    <Compile Include="Lidgren.Network\NetUnreliableSenderChannel.cs" />
+    <Compile Include="Lidgren.Network\NetUnreliableSequencedReceiver.cs" />
+    <Compile Include="Lidgren.Network\NetUnreliableUnorderedReceiver.cs" />
+    <Compile Include="Lidgren.Network\NetUPnP.cs" />
+    <Compile Include="Lidgren.Network\NetUtility.cs" />
+    <Compile Include="Lidgren.Network\Properties\AssemblyInfo.cs" />
+    <Compile Include="Lidgren.Network\SenderChannelBase.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="sockpol.cs" />
+    <Compile Include="GameServer.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Lidgren.Network\Documentation\ChangedFromV2.txt" />
+    <Content Include="Lidgren.Network\Documentation\Discovery.html" />
+    <Content Include="Lidgren.Network\Documentation\Improvements.txt" />
+    <Content Include="Lidgren.Network\Documentation\PacketLayout.txt" />
+    <Content Include="Lidgren.Network\Documentation\SimulatingBadNetwork.html" />
+    <Content Include="Lidgren.Network\Documentation\TODO.txt" />
+    <Content Include="Lidgren.Network\Documentation\Tutorial.html" />
+    <Content Include="Lidgren.Network\Lidgren.Network.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CrabBattleServer_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 Client Profile %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

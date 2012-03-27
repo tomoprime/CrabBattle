@@ -1,20 +1,22 @@
-﻿<Properties>
+﻿<Properties GitUserInfo="UsingGIT">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/NetworkManager.cs">
+  <MonoDevelop.Ide.Workbench>
     <Files>
-      <File FileName="Assets/Scripts/OpenScene/GameManager.cs" Line="17" Column="200" />
-      <File FileName="Assets/Scripts/OpenScene/OpenSceneMgr.cs" Line="39" Column="45" />
-      <File FileName="Assets/Scripts/NetworkManager.cs" Line="555" Column="4" />
-      <File FileName="Assets/Scripts/Scores.cs" Line="145" Column="9" />
-      <File FileName="Assets/Scripts/CameraController.cs" Line="77" Column="3" />
+      <File FileName="Assets/Scripts/OpenScene/GameManager.cs" Line="18" Column="5" />
+      <File FileName="Assets/Scripts/OpenScene/OpenSceneMgr.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/NetworkManager.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/Scores.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/CameraController.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True" selected="True">
+        <State expanded="True">
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Assets" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="OpenScene" expanded="True" />
+                <Node name="OpenScene" expanded="True">
+                  <Node name="GameManager.cs" selected="True" />
+                </Node>
               </Node>
             </Node>
           </Node>
