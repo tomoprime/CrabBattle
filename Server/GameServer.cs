@@ -80,16 +80,14 @@ namespace CrabBattleServer
 	class GameServer
 	{
 		private static NetServer server;
-	    private NetPeerConfiguration config;
+		private NetPeerConfiguration config;
 		//private AsyncOperation operation;
-	    public static List<PlayerObject> players;
-		
+		public static List<PlayerObject> players;
 		public static int healthMod = 1;
-		
 		private CrabBehavior crab;
 		private DateTime time, lastBeat, introtime;
-	    private TimeSpan timetopass, beatrate, introlength;
-	    private bool playintro = true;
+		private TimeSpan timetopass, beatrate, introlength;
+		private bool playintro = true;
 		private bool isRunning;
 		private int gamePhase = 0;
 		private int playercount = 0;
@@ -99,8 +97,8 @@ namespace CrabBattleServer
 		
 		public GameServer (int gameport, int maxplayers)
 		{
-			// needed for RegisterReceivedCallback, todo replace with AsyncOperationM...
-            if(SynchronizationContext.Current == null) 
+			// needed for RegisterReceivedCallback, TODO replace with AsyncOperationM...
+			if(SynchronizationContext.Current == null) 
 				SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 			
 			//operation = AsyncOperationManager.CreateOperation(null);
@@ -116,19 +114,19 @@ namespace CrabBattleServer
 			players = new List<PlayerObject>();
 			server = new NetServer(config);
 			server.RegisterReceivedCallback(new SendOrPostCallback(HandleMessages));
-	        server.Start();
-	        Console.WriteLine("Crab Battle server open for business on Port: "+config.Port);
+			server.Start();
+			Console.WriteLine("Crab Battle server open for business on Port: "+config.Port);
 			
-	    	introtime = DateTime.Now;
+			introtime = DateTime.Now;
 			
 			t1 = new Thread(new ThreadStart(RunGameLoop));
-            t1.Name = "Game Loop Thread";
-            t1.Start();
-
+			t1.Name = "Game Loop Thread";
+			t1.Start();
+			
 			// Replaced by RegisterReceivedCallback a.k.a HandleMessages
 			/*
 			t2 = new Thread(new ThreadStart(MessageProcessor));
-            t2.Name = "Message Loop Thread";
+			t2.Name = "Message Loop Thread";
 			t2.Start();
 			*/	
 		}
@@ -146,22 +144,22 @@ namespace CrabBattleServer
 			isRunning = true;
 			
 			if(playintro == false)
-	           introlength = new TimeSpan(0, 0, 3);
-	        else
-	            introlength = new TimeSpan(0, 0, 21);
-		        
+			   introlength = new TimeSpan(0, 0, 3);
+			else
+			    introlength = new TimeSpan(0, 0, 21);
+			    
 			timetopass = new TimeSpan(0,0,0,0,50);
-	    	beatrate = new TimeSpan(0, 0, 1);
+			beatrate = new TimeSpan(0, 0, 1);
 			
 			time	 = DateTime.Now;
 			lastBeat = DateTime.Now;
 			
-	        NetOutgoingMessage outmsg;
-		
-	        crab = new CrabBehavior();
-            
+			NetOutgoingMessage outmsg;
+			
+			crab = new CrabBehavior();
+			
 			while(isRunning)
-            {
+			{
                 //The gamestate stuff comes first because we drop a continue if no packet is recieved.
                 if (gamePhase != (int)GameState.Lobby && players.Count == 0)
                 {
@@ -254,7 +252,8 @@ namespace CrabBattleServer
 				HandleMessages(server.ReadMessage());
 			}
 		}
-		*/		
+		*/
+		
 		public static void CrabAction(int actionId, float speed)
         {
             Console.WriteLine("The crab is performing action " + Enum.GetName(typeof(CrabActions), actionId) + " with a modifier of "+speed+"x.");
@@ -276,14 +275,12 @@ namespace CrabBattleServer
             outmsg.Write(msg);
             server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
         }
-
+		
 		public void HandleMessages(object fromPlayer)
 		{
-			//if ((var inmsg = server.ReadMessage()) == null) return;
 			NetIncomingMessage inmsg;
 			if ((inmsg = ((NetServer)fromPlayer).ReadMessage()) == null) return;
 
-			//Console.WriteLine("Process "+inmsg.MessageType+" "+inmsg.SenderConnection.ToString());
 			NetOutgoingMessage outmsg;
                 switch(inmsg.MessageType)
                 {
@@ -328,11 +325,11 @@ namespace CrabBattleServer
                         outmsg.Write((byte)PacketTypes.PlayerCount);
                         outmsg.Write((Int16)players.Count);
                         server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
-						
-						//Send the current status of Play Intro to client
-						outmsg = server.CreateMessage();
+				
+                        //Send the current status of Play Intro to client
+                        outmsg = server.CreateMessage();
                         outmsg.Write((byte)PacketTypes.PlayIntro);
-						outmsg.Write(playintro);
+                        outmsg.Write(playintro);
                         server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
 				
                         //Send difficulty settings to the new player
@@ -405,7 +402,7 @@ namespace CrabBattleServer
                                     }
                                 }
                                 break;
-                            case PacketTypes.Ready:
+							case PacketTypes.Ready:
                                 {
                                     //Player is ready to start the game.
                                     player.Ready = inmsg.ReadBoolean();
@@ -510,12 +507,7 @@ namespace CrabBattleServer
 
                                             server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
                                         }
-										/*
-                                        outmsg = server.CreateMessage();
-                                        outmsg.Write((byte)PacketTypes.PlayIntro);
-										outmsg.Write(playintro);
-                                        server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
-										*/
+
                                         gamePhase = (int)GameState.Intro;
 
                                         crab = new CrabBehavior(); //Prepare the CRAB!
