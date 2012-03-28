@@ -22,7 +22,6 @@ namespace CrabBattleServer
 			Console.WriteLine("       CrabBattleServer.exe srvport");
 			Console.WriteLine("       CrabBattleServer.exe srvport polyport");
 			Console.WriteLine("       CrabBattleServer.exe srvport polyport maxplayers\n");
-			Console.WriteLine("Hit ESC to exit");
 			Console.WriteLine("Example: CrabBattleServer.exe "+serverport+" "+policyport+" "+maxconnections+"\n");
 			
 			//Setup the policy server first.
@@ -41,6 +40,7 @@ namespace CrabBattleServer
 			
 			gs.StartServer();
 			
+			Console.WriteLine("\n Hit 'ESC' to stop service.");
 			while (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape)
 				Thread.Sleep(50);
 			

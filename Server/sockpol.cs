@@ -87,18 +87,18 @@ class SocketPolicyServer {
 			listen_socket.Bind (new IPEndPoint (IPAddress.Any, _policyPort));
 			listen_socket.Listen (500);
 			listen_socket.Blocking = false;
-			Console.WriteLine("Policy service started on Port: "+_policyPort);
+			Console.WriteLine(" Policy service started on Port: "+_policyPort);
 		}
 		catch (SocketException se) {
 			code=1;
 			// Most common mistake: port 843 is not user accessible on unix-like operating systems
 			if (se.SocketErrorCode == SocketError.AccessDenied) {
-				Console.WriteLine ("NOTE: must be run as root if listen is <1024 to port "+_policyPort);
+				Console.WriteLine (" NOTE: must be run as root if listen is <1024 to port "+_policyPort);
 				code=5;
 			} else {
 				code=6;
 			}
-			Console.WriteLine ("Failed to start policy server: "+se.Message.ToString());
+			Console.WriteLine (" Failed to start policy server: "+se.Message.ToString());
 			return code;
 		}
 
@@ -183,6 +183,8 @@ class SocketPolicyServer {
 	{
 		runner.Abort ();
 		listen_socket.Close ();
+		Console.WriteLine("");
+		Console.WriteLine("  Policy service stopped.");
 	}
 
 	const string AllPolicy = 

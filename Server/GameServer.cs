@@ -88,7 +88,7 @@ namespace CrabBattleServer
 		private DateTime time, lastBeat, introtime;
 		private TimeSpan timetopass, beatrate, introlength;
 		private bool playintro = true;
-		private bool isRunning;
+		private volatile bool isRunning;
 		private int gamePhase = 0;
 		private int playercount = 0;
 		private int beatnum = 0;
@@ -115,14 +115,15 @@ namespace CrabBattleServer
 			server = new NetServer(config);
 			server.RegisterReceivedCallback(new SendOrPostCallback(HandleMessages));
 			server.Start();
-			Console.WriteLine("Crab Battle server open for business on Port: "+config.Port);
+			Console.WriteLine(" Crab Battle server open for business on Port: "+config.Port);
+			Console.WriteLine(" Max number of players is: "+config.MaximumConnections);
 			
 			introtime = DateTime.Now;
 			
 			t1 = new Thread(new ThreadStart(RunGameLoop));
 			t1.Name = "Game Loop Thread";
 			t1.Start();
-			
+			Thread.Sleep(500);
 			// Replaced by RegisterReceivedCallback a.k.a HandleMessages
 			/*
 			t2 = new Thread(new ThreadStart(MessageProcessor));
@@ -135,12 +136,15 @@ namespace CrabBattleServer
 		{
 			isRunning = false;
 			if (server!=null)
-				server.Shutdown("Stopping Server");
+				server.Shutdown(" Stopping Server");
+			if (t1 != null)
+				t1.Join();
+			Console.WriteLine(" Crab Battle server was shutdown.");
 		}
 		
-		public void RunGameLoop ()
+		public void RunGameLoop()
 		{
-			Console.WriteLine("Starting RunGameLoop Thread");
+			Console.WriteLine(" Starting RunGameLoop Thread.");
 			isRunning = true;
 			
 			if(playintro == false)
@@ -160,7 +164,6 @@ namespace CrabBattleServer
 			
 			while(isRunning)
 			{
-                //The gamestate stuff comes first because we drop a continue if no packet is recieved.
                 if (gamePhase != (int)GameState.Lobby && players.Count == 0)
                 {
                     Console.WriteLine("All players disconnected, returning to lobby gamestate.");
@@ -240,6 +243,7 @@ namespace CrabBattleServer
 				// Adjust delay to free up cpu as needed
 				Thread.Sleep(5);
 			}
+			Console.WriteLine(" Stopped RunGameLoop Thread.");
 		}
 		
 		/*		
