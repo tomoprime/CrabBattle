@@ -37,7 +37,7 @@ public class OpenSceneMgr : MonoBehaviour {
         GUI.Label(new Rect(20, 100, 250, 20), "MultiPlayer instructions for your own host:");
 
         GUI.Label(new Rect(30, 125, 260, 125), gm.greeting);
-        if (GUI.Button(new Rect(190, 240, 90, 20), "Get Server"))
+        if (GUI.Button(new Rect(190, 240, 90, 20), "Get Source"))
         {
 			Application.OpenURL(gm.downloadServerUrl);
         }
