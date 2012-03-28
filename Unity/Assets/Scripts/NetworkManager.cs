@@ -169,8 +169,6 @@ public class NetworkManager : MonoBehaviour {
 
     public void OnGUI()
     {
-		//if (Application.loadedLevel!=0)
-		
         if (gamephase == 0 && isConnected)
         {
             windowrect.x = Mathf.Clamp(windowrect.x, 0, Screen.width - windowrect.width);
@@ -500,8 +498,8 @@ public class NetworkManager : MonoBehaviour {
                                 {
                                     difficulty = inc.ReadInt16();
                                     healthmod = inc.ReadInt16();
-                                    Debug.Log(difficulty + " " + healthmod);
-                                    AddConsoleMessage("Server sent changes to the difficulty settings.");
+                                    Debug.Log("Difficulty: "+difficulty + " Battle Length: " + healthmod);
+                                    AddConsoleMessage("Game difficulty: "+difficulty + " Battle Length: " + healthmod);
                                 }
                                 break;
                             case (byte)PacketTypes.AssignId:

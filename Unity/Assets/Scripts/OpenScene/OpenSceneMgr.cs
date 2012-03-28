@@ -66,10 +66,4 @@ public class OpenSceneMgr : MonoBehaviour {
 
         GUI.DragWindow();
     }
-	
-    // Update is called once per frame
-    void Update () 
-    {
-	
-    }
 }

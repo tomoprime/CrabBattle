@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviour {
     public string ipAddress = "www.tomogames.com";
 	public int gamePort = 14248;
 	public int policyPort = 8843;
-	public string downloadServerUrl = "http://www.tomogames.com/CrabBattleServer.exe"; //"http://dodsrv.com/Unity/Crabbattle/CrabBattleServer.exe";
+	public string downloadServerUrl = "https://github.com/tomoprime/CrabBattle";//"http://www.tomogames.com/CrabBattleServer.exe"; //"http://dodsrv.com/Unity/Crabbattle/CrabBattleServer.exe";
 	public string scoreUrl = "http://www.dodsrv.com/crabbattle/scoresubmit.php";
 	
 	public string greeting = "You'll need to have at least one person running a multiplayer server in order to play. "+
