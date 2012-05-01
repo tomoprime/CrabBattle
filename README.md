@@ -7,10 +7,25 @@ This project was created to help people get a Client / Server Game going using <
 Let the games begin,<br>
 Tom Acunzo - aka <i>Tomoprime</i>
 
+<h3>Current build v1.1</h3>
+
+- Multiplayer 
+Added late joiner support to access a game already in play.
+Players can chat each other while in game.
+Client side keepalives verify that idle connections are active one's (not corrupt). Server will drop them.
+Threading has been improved on client side to help close unwanted connections.
+Game difficulty and enemy health options are selectable while in game.
+            
+- Crab eyes now light up when play intro is disabled.
+            
+- Lots of a changes to code structure and tweaks to help make the code base more understandable.
+
+- Settings have been moved to GameManager.cs and GameServer.cs
+
 <b>Original Author:</b> Dan McNeill - aka <i>Doddler</i> Readme below...
 <hr>
 <pre>
-About Source Code
+About Source Code 
 
 I'm always learning about coding practices and such, you'll notice the code is pretty messy. 
 If you've seen I've done anything particularly erroneous, let me know! Everything that I made for the
@@ -34,5 +49,5 @@ Oh!  And CryptoHelper.cs was written by a friend, so please don't use or distrib
 
 I hope the code is helpful in someway and that you can learn something from it. :)
 
-Dan "Doddler" McNeill
+Dan "Doddler" McNeill (http://dodsrv.com/crabbattle/)
 </pre>
