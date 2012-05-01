@@ -156,6 +156,7 @@
     <Compile Include="sockpol.cs" />
     <Compile Include="GameServer.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Vector3.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Lidgren.Network\Documentation\ChangedFromV2.txt" />

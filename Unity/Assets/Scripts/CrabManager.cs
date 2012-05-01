@@ -6,6 +6,7 @@ using System.Collections;
 public class CrabManager : MonoBehaviour {
 
     NetworkManager Netman;
+	GameManager gm;
 
     enum WalkStates
     {
@@ -66,6 +67,13 @@ public class CrabManager : MonoBehaviour {
 
     bool breaklaser = false;
     int diffmod = 0;
+	
+	float lastUpdate = 0;
+	
+	public bool isAlive
+	{
+		get {return !CrabDying;}
+	}
         
 #if Use_Vectrosity
 
@@ -77,8 +85,8 @@ public class CrabManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
     {
-        Netman = NetworkManager.GetInstance();
-
+        Netman = NetworkManager.Instance;//.GetInstance();
+		gm = GameManager.GetInstance();
         Netman.Enemy.animation.Play("idle");
 
         Animation a = Netman.Enemy.animation;
@@ -109,7 +117,8 @@ public class CrabManager : MonoBehaviour {
         RealLerp = 0f;
 
         white = GameObject.Find("White");
-        white.active = false; //Stupid being unable to find an inactive game object...
+        if (white!=null)
+			white.active = false; //Stupid being unable to find an inactive game object...
 
 #if Use_Vectrosity
         Boundary = new VectorLine("Boundary", new Vector3[100], BoundaryMat, 3f);
@@ -619,7 +628,7 @@ public class CrabManager : MonoBehaviour {
             {
                 Vector3 gun1point = BMan.GetEnemyBulletSpawnPoint(gun1.transform.position);
                 Vector3 gun2point = BMan.GetEnemyBulletSpawnPoint(gun2.transform.position);
-                Vector3 gun3point = gun3point = BMan.GetEnemyBulletSpawnPoint(gun3.transform.position + (Quaternion.Euler(gun3.transform.rotation.eulerAngles) * new Vector3(-25.2f, 0f, 0f)));
+                Vector3 gun3point = BMan.GetEnemyBulletSpawnPoint(gun3.transform.position + (Quaternion.Euler(gun3.transform.rotation.eulerAngles) * new Vector3(-25.2f, 0f, 0f)));
 
                 for (int j = 0; j < 6; j++)
                 {
@@ -659,15 +668,15 @@ public class CrabManager : MonoBehaviour {
 
         yield return null;
     }
-
+	/*
     void OnGUI()
     {
-        //if (Netman.gamephase == 2 && CurrentHealth > 0)
-        //{
-        //    GUI.Label(new Rect(10, 40, 200, 25), "Enemy Health: " + CurrentHealth);
-        //}
+        if (gm.gamephase == 2 && CurrentHealth > 0)
+        {
+            GUI.Label(new Rect(10, 40, 200, 25), "Enemy Health: " + CurrentHealth);
+        }
     }
-
+	*/
     void WalkLeft(float speed)
     {
         Netman.Enemy.animation["walkleft"].speed = speed;
@@ -793,7 +802,7 @@ public class CrabManager : MonoBehaviour {
 
     public void WeakPointFeedback(float c)
     {
-        if (c > healthbar.color.r) 
+        if (healthbar !=null && ( healthbar.color.Equals(null) || c > healthbar.color.r )) 
             healthbar.color = new Color(c, c, c, 1);
     }
 
@@ -805,9 +814,11 @@ public class CrabManager : MonoBehaviour {
 
     public void CrabMoveSync(float x, float z, float aimx, float aimz, bool direction, float time)
     {
+		lastUpdate = Time.time;
+		//print ("Current "+CurrentTarget+" "+gm.isReady);
         if (CrabDying)
             return;
-
+		
         RealPosition = new Vector3(x, transform.position.y, z);
         CurrentTarget = new Vector3(aimx, transform.position.y, aimz);
 
@@ -815,7 +826,20 @@ public class CrabManager : MonoBehaviour {
 
         SyncLerp = 0f;
         RealLerp = time;
-
+		
+		// Assuming the player is a late joiner jump to InGame position
+		if (gm.gamephase == 1)
+		{
+			gameObject.transform.position = RealPosition;
+			gameObject.transform.rotation = RealRotation;
+			
+			if (CurrentHealth <= 0 && CurrentHealth != -999 && !CrabDying)
+			{
+				CrabDying = true;
+				StartCoroutine(CrabFastDeath());
+			}
+		}
+		
         //Changed from left to right.  Or right to left.  I dunno really.  It works though.
         if (!direction && Direction != direction)
             gameObject.animation.CrossFade("walkright");
@@ -860,7 +884,56 @@ public class CrabManager : MonoBehaviour {
             GameObject.Destroy(e);
         }
     }
+	
+	IEnumerator EyesAlive()
+    {
+		GameObject eye, light;
 
+        eye = GameObject.Find("EyeL1");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        eye = GameObject.Find("EyeR1");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        yield return new WaitForSeconds(0.3f);
+
+        eye = GameObject.Find("EyeL2");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        eye = GameObject.Find("EyeR2");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        yield return new WaitForSeconds(0.3f);
+
+        eye = GameObject.Find("EyeL3");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        eye = GameObject.Find("EyeR3");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        yield return new WaitForSeconds(0.3f);
+
+        eye = GameObject.Find("EyeL4");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+
+        eye = GameObject.Find("EyeR4");
+        light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
+        light.transform.parent = eye.transform;
+	}
+
+	public void CalculateHealth ()
+	{
+		MaxHealth = 800 + 700 * Netman.Players.Count * Netman.healthmod;
+		CurrentHealth = MaxHealth;
+	}
+	
     IEnumerator CrabDeathExplosions()
     {
         Vector3 pos;
@@ -882,16 +955,35 @@ public class CrabManager : MonoBehaviour {
             yield return new WaitForSeconds(0.09f);
         }
     }
+	
+	IEnumerator CrabFastDeath()
+	{
+		gameObject.animation.CrossFade("laying");
+		yield return new WaitForSeconds(1f);
+		Netman.Enemy.animation["crabdeath"].speed = 5f;
+        Netman.Enemy.animation["crabdeath"].wrapMode = WrapMode.ClampForever;
+        Netman.Enemy.animation.CrossFade("crabdeath");
+		yield return new WaitForSeconds(1f);
+		GameObject gun = GameObject.Find("GunMid/Gun");
 
+    	if (gun) for (int i = 0; i < gun.transform.childCount; i++)
+            	Destroy(gun.transform.GetChild(i).gameObject);
+		
+		StartCoroutine(EyeDeath());
+		yield return new WaitForSeconds(6f);
+		StartCoroutine(MusicFade());
+		yield return new WaitForSeconds(2f);
+        gm.gamephase = 3; //Post-game
+        Netman.ShowScores();
+	}
+	
     IEnumerator CrabDie()
     {
         Netman.Enemy.animation.Stop("shittonofbullets");
-
         Netman.endtime = Time.time;
 
         StopCoroutine("CrazyBarrage");
         GameObject torso = GameObject.Find("Torso");
-
         GameObject gun = GameObject.Find("GunMid/Gun");
 
         if (gun)
@@ -996,7 +1088,7 @@ public class CrabManager : MonoBehaviour {
 
         yield return new WaitForSeconds(2f);
 
-        Netman.gamephase = 3; //Post-game
+        gm.gamephase = 3; //Post-game
 
         Netman.ShowScores();
     }
@@ -1004,30 +1096,39 @@ public class CrabManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
     {
-        //Debug.Log(CurrentHealth);
-
-        if (Netman.gamephase == 2)
+		// Note see CrabMoveSync() for changes outside of Update and gamephase == 1
+        if (gm.gamephase == 2 ) 
         {
+			if (!gm.isSoloPlay && (Time.time > (lastUpdate + 2.5f))) 
+			{
+				//print("time "+Time.time + " lastU "+lastUpdate+3);
+				gameObject.animation.CrossFade("laying");
+				return;
+			}
+	
             if (crabActive == false)
             {
                 crabActive = true;
-                StartCoroutine(BlinkWeakPointMessage(10));
+				
+				if (isAlive) {
+					if (!gm.isPlayIntro) StartCoroutine(EyesAlive());
+                	StartCoroutine(BlinkWeakPointMessage(10));
+				}
+				
                 healthbarobject = GameObject.Instantiate(Resources.Load("Healthbar")) as GameObject;
                 healthbar = healthbarobject.GetComponent<GUITexture>();
                 lastWeakPointHit = 0f;
 
                 MaxHealth = 800 + 700 * Netman.Players.Count * Netman.healthmod;
-                //if (Netman.healthmod == 0)
-                //    MaxHealth = 200;
-                CurrentHealth = MaxHealth;
+				//CurrentHealth = MaxHealth; // if late joiner don't reset CurrentHealth or out of sync
 
+				healthLerp = CurrentHealth;
                 Netman.starttime = Time.time;
             }
-
+			
             if (CurrentHealth <= 0 && CurrentHealth != -999 && !CrabDying)
             {
                 StartCoroutine(CrabDie());
-
                 CrabDying = true;
             }
 
@@ -1083,7 +1184,6 @@ public class CrabManager : MonoBehaviour {
             }
             Boundary.vectorObject.transform.position = new Vector3(transform.position.x, 1.5f, transform.position.z);
 #endif
-
         }
 	}
 }

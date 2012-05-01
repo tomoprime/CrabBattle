@@ -1,17 +1,17 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="GameServer.cs">
     <Files>
-      <File FileName="GameServer.cs" Line="14" Column="16" />
-      <File FileName="CrabBehavior.cs" Line="1" Column="1" />
+      <File FileName="GameServer.cs" Line="466" Column="1" />
+      <File FileName="CrabBehavior.cs" Line="142" Column="14" />
       <File FileName="Program.cs" Line="1" Column="1" />
-      <File FileName="sockpol.cs" Line="1" Column="1" />
+      <File FileName="sockpol.cs" Line="116" Column="16" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="CrabBattleServer" expanded="True">
-            <Node name="GameServer.cs" selected="True" />
+            <Node name="CrabBattleServer_TemporaryKey.pfx" selected="True" />
           </Node>
         </State>
       </Pad>

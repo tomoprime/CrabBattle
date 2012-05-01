@@ -64,7 +64,8 @@ namespace CrabBattleServer
         public bool Direction;
 
         public int CurrentTarget;
-
+		public Vector3 RealPosition;
+		
         Stopwatch TotalElapsed;
 
         float changetick;
@@ -72,7 +73,7 @@ namespace CrabBattleServer
         public CrabBehavior()
         {
             random = new Random();
-
+			RealPosition = new Vector3();
             MajorActions = new List<Action>();
             MovementActions = new List<Action>();
 
@@ -93,11 +94,8 @@ namespace CrabBattleServer
             MovementActions.Add(new Action((int)CrabActions.WalkRight, 100, 100, 5, 30, true, true));
             MovementActions.Add(new Action((int)CrabActions.WalkStop, 100, 100, 5, 30, true, true));
 
-
-            MaxHealth = 800 + 700 * GameServer.players.Count * GameServer.healthMod;
-            CurrentHealth = MaxHealth;
+            CalculateHealth();
             
-
             TotalElapsed = new Stopwatch();
             TotalElapsed.Start();
 
@@ -109,7 +107,13 @@ namespace CrabBattleServer
 
             CurrentTarget = -1;
         }
-
+		
+		public void CalculateHealth()
+		{
+			MaxHealth = 800 + 700 * GameServer.players.Count * GameServer.healthMod;
+            CurrentHealth = MaxHealth;
+		}
+		
         public void UseCrabAction(Action crabAction)
         {
             ActionLength = crabAction.BaseLength;
@@ -139,18 +143,22 @@ namespace CrabBattleServer
         public void GoGoBattleCrab()
         {
             if (CurrentTarget == -1)
-                CurrentTarget = GameServer.players[0].Id;
-
-            if (TargetChange.ElapsedMilliseconds > changetick)
+               CurrentTarget = GameServer.players[0].Id;
+			
+			// new code simply makes crab target only players in game basicly
+			List<PlayerObject> readyPlayers = GameServer.players.FindAll(p => p.Ready);
+            if (readyPlayers.Count == 0) return;
+			
+			if (TargetChange.ElapsedMilliseconds > changetick)
             {
                 int rnd = random.Next(0, 4);
                 if (rnd == 0)
                 {
                     changetick = 10000;
                     TargetChange.Restart();
-                    int prnd = random.Next(0, GameServer.players.Count);
-                    CurrentTarget = GameServer.players[prnd].Id;
-                    Console.WriteLine("(id "+prnd+") Crab is changing targets to "+GameServer.players[prnd].Name);
+					int prnd = random.Next(0, readyPlayers.Count);
+                    CurrentTarget = readyPlayers[prnd].Id;
+                    Console.WriteLine("(id "+CurrentTarget+") Crab is changing targets to "+readyPlayers[prnd].Name);
                 }
                 else
                     changetick += 1000;

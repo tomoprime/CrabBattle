@@ -17,7 +17,7 @@ public class EnemySmallShotProjectile : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
     {
-        Enemy = NetworkManager.GetInstance().Enemy;
+        Enemy = NetworkManager.Instance.Enemy;//NetworkManager.GetInstance().Enemy;
 	}
 
     IEnumerator FadeAway(float time)

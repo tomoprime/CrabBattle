@@ -4,8 +4,7 @@ using System.Collections;
 public class CameraController : MonoBehaviour {
 
     NetworkManager Netman;
-    bool isIntroStarted = false;
-
+    
     public GameObject Miniwarning1;
     public GameObject Miniwarning2;
     public GameObject Warning1;
@@ -23,10 +22,10 @@ public class CameraController : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
     {
-        Netman = NetworkManager.GetInstance();
+        Netman = NetworkManager.Instance;// NetworkManager.GetInstance();
 	}
 
-    IEnumerator ScrollWarningMaterial(float time)
+    public IEnumerator ScrollWarningMaterial(float time)
     {
         for (float i = 0f; i < time; i += Time.deltaTime)
         {
@@ -39,7 +38,7 @@ public class CameraController : MonoBehaviour {
         }
     }
 
-    IEnumerator FlashWarning(int times)
+    public IEnumerator FlashWarning(int times)
     {
         GameObject.Instantiate(Resources.Load("SoundWarning"));
 
@@ -71,37 +70,40 @@ public class CameraController : MonoBehaviour {
         Destroy(Warning1);
     }
 
-	IEnumerator PlayIntro()
+	public IEnumerator PlayIntro()
     {
         //Why is the intro in the camera controller?  I dunno, it just happened to end up here!!
+		//while(Netman.Players.Count < Netman.numPlayers || Netman.numPlayers == 0) yield return new WaitForSeconds(.15f);
+        //print ("Players.Count "+Netman.Players.Count+ " vs. "+Netman.numPlayers+" numPlayers");
+		yield return new WaitForSeconds(1.5f);
+		Vector3 enemyPosition = new Vector3(Netman.Enemy.transform.position.x,15f,Netman.Enemy.transform.position.y-50); //new Vector3(Netman.Player.Obj.transform.position.x, 15f, -50f)
+		iTween.MoveTo(Netman.Player.Obj, iTween.Hash("Position", enemyPosition, "easetype", "easeOutSine", "time", 6));
 		
-        foreach (PlayerObject p in Netman.Players)
-        {		
-            if(!playintro)
-                p.Obj.transform.position = new Vector3(p.Obj.transform.position.x, 15f, -50f);
+		/*
+		foreach (PlayerObject p in Netman.Players)
+		{
+			if(!playintro)
+               p.Obj.transform.position = new Vector3(p.Obj.transform.position.x, 15f, -50f);
             else
-                iTween.MoveTo(p.Obj, iTween.Hash("Position", new Vector3(p.Obj.transform.position.x, 15f, -50f), "easetype", "easeOutSine", "time", 20));
-            
-            p.Controller.SetupPlayer(p.Id, p.Id == Netman.ClientId ? true : false);
+            	iTween.MoveTo(p.Obj, iTween.Hash("Position", new Vector3(p.Obj.transform.position.x, 15f, -50f), "easetype", "easeOutSine", "time", 20));        
         }
-
+        */
+		
+		yield return new WaitForSeconds(.5f);
+		StartCoroutine(FlashWarning(4));
+        yield return new WaitForSeconds(5f);
+		
         if (!playintro)
         {
             if (PlayMusic == true)
                 GameObject.Instantiate(Resources.Load("Music"));
-
-            yield return new WaitForSeconds(2f);
-
-            //20 second mark
-            Debug.Log("Starting Game!");
-            Netman.gamephase = 2; //Start the game
-
+            //yield return new WaitForSeconds(2f);
         }
         else
         {
-            yield return new WaitForSeconds(2f);
-            StartCoroutine(FlashWarning(4));
-            yield return new WaitForSeconds(4f);
+            //yield return new WaitForSeconds(2f);
+            //StartCoroutine(FlashWarning(4));
+            //yield return new WaitForSeconds(4f);
             introPhase = 1;
             iTween.RotateTo(gameObject, iTween.Hash("x", -20, "easetype", "easeOutQuint", "time", 6));
             iTween.MoveTo(gameObject, iTween.Hash("position", new Vector3(0f, 5f, -50f), "easetype", "easeOutQuint", "time", 4));
@@ -124,7 +126,7 @@ public class CameraController : MonoBehaviour {
             eye = GameObject.Find("EyeR1");
             light = GameObject.Instantiate(Resources.Load("CrabFlare"), eye.transform.position, eye.transform.rotation) as GameObject;
             light.transform.parent = eye.transform;
-
+			
             yield return new WaitForSeconds(0.3f);
 
             eye = GameObject.Find("EyeL2");
@@ -197,13 +199,16 @@ public class CameraController : MonoBehaviour {
             Destroy(Bossname2);
 
             yield return new WaitForSeconds(2f);
-
             //20 second mark
-            Debug.Log("Starting Game!");
-            Netman.gamephase = 2; //Start the game
         }
+		Debug.Log("Starting Game!");
     }
-
+	
+	public void CameraRotateAround()
+	{
+		transform.RotateAround(Vector3.zero, Vector3.up, 10 * Time.deltaTime);
+	}
+	
     public Vector3 GetCameraMidpointForAllObjects()
     {
         Vector3 sum = Vector3.zero;
@@ -220,9 +225,9 @@ public class CameraController : MonoBehaviour {
         return sum / numobjects;
     }
 
-    void CameraTrackLocalPlayer()
+    public void CameraTrackLocalPlayer()
     {
-        if (introPhase == 1)
+        if (introPhase == 1||Netman.Player == null)
             return;
 
         float optimalheight = 100f; //This is how high the camera should be when tracking 1 player.
@@ -242,7 +247,7 @@ public class CameraController : MonoBehaviour {
         transform.rotation = Quaternion.Lerp(currot, tarrot, Time.deltaTime * 3f);
     }
 
-    void CameraMidpointAllActors()
+    public void CameraMidpointAllActors()
     {
         float optimalheight = 100f; //This is how high the camera should be when tracking 1 player.
 
@@ -279,29 +284,4 @@ public class CameraController : MonoBehaviour {
         transform.rotation = Quaternion.Lerp(currot, tarrot, Time.deltaTime * 3f);
     }
 
-	// Update is called once per frame
-	void Update () 
-    {
-        if (Netman.gamephase == 0)
-        {
-            transform.RotateAround(Vector3.zero, Vector3.up, 10 * Time.deltaTime);
-			if (playintro!=Netman.isPlayIntro)
-				playintro=Netman.isPlayIntro;
-        }
-        if (Netman.gamephase == 1 && isIntroStarted == false)
-        {
-            StartCoroutine(PlayIntro());
-            isIntroStarted = true;
-        }
-        if(Netman.gamephase == 1)
-            CameraTrackLocalPlayer();
-
-        if (Netman.gamephase == 2)
-            CameraMidpointAllActors();
-	}
-
-    void LateUpdate()
-    {
-        
-    }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class PlayerController : MonoBehaviour {
 
     NetworkManager Netman;
+	GameManager gm;
     BulletManager BM;
     
     float VelocityX;
@@ -69,8 +70,8 @@ public class PlayerController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Netman = NetworkManager.GetInstance();
-
+        Netman = NetworkManager.Instance;
+		gm = GameManager.GetInstance();
         BM = BulletManager.GetInstance();
 
         VelocityX = 0f;
@@ -167,7 +168,7 @@ public class PlayerController : MonoBehaviour {
         TimeSinceHit += Time.deltaTime;
 
         //Playercontroller has no use outside of the playable game phase.
-        if (Netman.gamephase >= 2 && MyID >= 0)
+        if (gm.gamephase >= 2 && MyID >= 0)
         {
             if (!IsLocal)
             {
@@ -229,6 +230,15 @@ public class PlayerController : MonoBehaviour {
 
                 ShipPower += Time.deltaTime;
                 
+				if (!gm.isReady)
+				{
+				 	xMove = 0;
+                 	zMove = 0;
+                 	shoot = false;
+                 	bigshot = false;
+                 	shieldon = true;
+				}
+				
                 //Shield drains power at a rate dependant on game difficulty.
                 if (ShieldOn)
                     ShipPower -= Time.deltaTime * (3 + Netman.difficulty);

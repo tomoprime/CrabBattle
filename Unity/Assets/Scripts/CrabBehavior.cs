@@ -83,7 +83,7 @@ namespace CrabBattleServer
             MajorActions = new List<Action>();
             MovementActions = new List<Action>();
 
-            netman = NetworkManager.GetInstance();
+            netman = NetworkManager.Instance;//GetInstance();
 
             //Id, Probability, StartHealth, BaseLength, DelayTime, CanAdjustSpeed, CanAdjustDelay
             MajorActions.Add(new Action((int)CrabActions.CrazyBarrage, 100, 35, 42, 40, false, false));
@@ -101,11 +101,11 @@ namespace CrabBattleServer
             MovementActions.Add(new Action((int)CrabActions.WalkLeft, 100, 100, 5, 30, true, true));
             MovementActions.Add(new Action((int)CrabActions.WalkRight, 100, 100, 5, 30, true, true));
             MovementActions.Add(new Action((int)CrabActions.WalkStop, 100, 100, 5, 30, true, true));
+			
+			netman.EnemyManager.CalculateHealth();
 
-
-            MaxHealth = 800 + 700 * netman.Players.Count * netman.healthmod;
-            CurrentHealth = MaxHealth;
-
+			CurrentHealth = netman.EnemyManager.CurrentHealth;
+            MaxHealth = netman.EnemyManager.MaxHealth;
 
             TotalElapsed = new Stopwatch();
             TotalElapsed.Start();

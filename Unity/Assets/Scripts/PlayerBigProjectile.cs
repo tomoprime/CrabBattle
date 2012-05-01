@@ -47,11 +47,11 @@ public class PlayerBigProjectile : MonoBehaviour {
             StartCoroutine(Autodestruct());
 
             if (other.tag == "Enemy")
-                NetworkManager.GetInstance().DealEnemyDamage(5, false);
+                NetworkManager.Instance.DealEnemyDamage(5, false);//GetInstance().DealEnemyDamage(5, false);
 
             if (other.tag == "WeakSpot")
             {
-                NetworkManager netman = NetworkManager.GetInstance();
+                NetworkManager netman = NetworkManager.Instance;//GetInstance();
 
                 netman.DealEnemyDamage(20, true);
                 netman.EnemyManager.HitWeakpoint();

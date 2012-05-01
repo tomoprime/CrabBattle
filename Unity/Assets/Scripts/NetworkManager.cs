@@ -1,8 +1,47 @@
 using UnityEngine;
 using System;
+using System.Net;
 using System.Collections;
 using System.Collections.Generic;
 using Lidgren.Network;
+
+enum PacketTypes
+{
+    Beat,
+    AssignId,
+    Ready,
+    UpdateName,
+	KeepAlive,
+    PlayIntro,
+    StartGame,
+    AddPlayer,
+    RemovePlayer,
+    PlayerAction,
+    PlayerSpecial,
+    HurtTarget,
+    EnemyHealth,
+    SelfHit,
+    PlayerHit,
+    EnemyPhaseChange,
+    EnemyAction,
+    EnemyTargetPosition,
+    EnemyStartTargeting,
+    EnemyEndTargeting,
+    Message,
+    SettingsChange,
+    PlayerCount,
+    Disconnect,
+    LobbyMessage,
+    EnemySync,
+	MessageDebug
+}
+
+enum GameState
+{
+    Lobby,
+    Intro,
+    InGame
+}
 
 public class PlayerObject
 {
@@ -23,13 +62,16 @@ public class PlayerObject
         Obj = obj;
         Name = name;
         Controller = Obj.GetComponent<PlayerController>();
+		Controller.SetupPlayer(id, id == NetworkManager.Instance.ClientId ? true : false);
     }
 }
 
-public class NetworkManager : MonoBehaviour {
-
-    public static NetworkManager Instance;
-    public static GameObject Container;
+public sealed class NetworkManager : MonoBehaviour {
+	
+	private static volatile NetworkManager _instance;
+	private static object _lock = new object();
+	static NetworkManager () {}
+    //public static GameObject Container;
 
     private static NetClient client;
     private NetIncomingMessage inc;
@@ -42,8 +84,6 @@ public class NetworkManager : MonoBehaviour {
     public GameObject Enemy;
     public CrabManager EnemyManager;
 
-    public int readystatus = 0;
-    public int gamephase = 0;
     public int difficulty = 1;
     public int healthmod = 1;
 
@@ -65,56 +105,65 @@ public class NetworkManager : MonoBehaviour {
     List<string> lobby;
 
     bool isConnected = false;
-    bool isReady = false;
-    float lastBeat = 0f;
-    int numPlayers = 0;
+    
+    //float lastBeat = 0f;
+	float lastSec = 0f;
+    internal int numPlayers = 0;
 
     public float starttime = 0;
     public float endtime = 0;
-
-    bool isSoloMode = false;
-	internal bool isPlayIntro = true;
-
-    enum PacketTypes
-    {
-        Beat,
-        AssignId,
-        Ready,
-        UpdateName,
-        PlayerAttemptedStart,
-        PlayIntro,
-        StartGame,
-        AddPlayer,
-        RemovePlayer,
-        PlayerAction,
-        PlayerSpecial,
-        HurtTarget,
-        EnemyHealth,
-        SelfHit,
-        PlayerHit,
-        EnemyPhaseChange,
-        EnemyAction,
-        EnemyTargetPosition,
-        EnemyStartTargeting,
-        EnemyEndTargeting,
-        Message,
-        SettingsChange,
-        PlayerCount,
-        Disconnect,
-        LobbyMessage,
-        EnemySync
-    }
-
-    public static NetworkManager GetInstance()
-    {
-        if (!Instance)
+	
+	private NetworkManager() {}
+	
+	public static NetworkManager Instance
+	{
+        get
         {
-            Container = new GameObject();
-            Container.name = "NetworkManager";
-            Instance = Container.AddComponent(typeof(NetworkManager)) as NetworkManager;
+            if (_instance == null)
+            {
+                lock(_lock)
+                {
+                    if (_instance == null)
+					{
+						GameObject Container = new GameObject();
+            			Container.name = "NetworkManager";
+            			_instance = Container.AddComponent(typeof(NetworkManager)) as NetworkManager;
+					}
+                }
+            }
+            return _instance;
         }
-        return Instance;
+		
     }
+	 
+	void Awake ()
+	{
+		//DontDestroyOnLoad(this);
+		/*
+		if (_instance)
+		{
+			_instance.Shutdown();
+		}
+		_instance = NetworkManager.Instance;
+		*/
+	}
+	
+	void OnDestroy()
+    {
+		_instance.Shutdown();
+    }
+	
+	void Shutdown ()
+	{
+		if (!gm.isSoloPlay)
+        {
+            NetOutgoingMessage outmsg = client.CreateMessage();
+            outmsg.Write((byte)PacketTypes.Disconnect);
+            client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered);
+			client.Shutdown(username+": Bye All");
+			print("Id"+ClientId+" Closing client connection...");
+        }
+	}
 	
 	// Use this for initialization
 	void Start () 
@@ -124,16 +173,15 @@ public class NetworkManager : MonoBehaviour {
         //Debug.Log(CryptoHelper.GetMd5String("Hello World!"));
 
         gm = GameManager.GetInstance();
-
+		newname = username = gm.username;
         hostIp = gm.ipAddress;
-        isSoloMode = gm.isSoloPlay;
 
         console = new List<string>();
         lobby = new List<string>();
 
         Players = new List<PlayerObject>();
 		
-        if (!isSoloMode)
+        if (!gm.isSoloPlay)
         {
             NetPeerConfiguration config = new NetPeerConfiguration("crab_battle");
 
@@ -142,19 +190,17 @@ public class NetworkManager : MonoBehaviour {
             NetOutgoingMessage outmsg = new NetOutgoingMessage();
 
             client.Start();
-
             outmsg.Write("A Client");
-
-            client.Connect(hostIp, gm.gamePort, outmsg);
+			client.Connect(hostIp, gm.gamePort, outmsg);
 
             AddConsoleMessage("Waiting for connection to server...");
         }
         else
         {
             isConnected = true; // In solo mode, we're always connected!
-            username = PlayerPrefs.GetString("Username", "Player");
-            newname = username;
-            isReady = true;
+            //username = PlayerPrefs.GetString("Username", "Player");
+            //newname = username;
+            gm.isReady = true;
             ClientId = 1;
         }
 
@@ -165,32 +211,53 @@ public class NetworkManager : MonoBehaviour {
         Enemy.animation.Play("laying");
 
         EnemyManager = Enemy.GetComponent<CrabManager>();
+		lastSec=Time.time;
 	}
 
     public void OnGUI()
     {
-        if (gamephase == 0 && isConnected)
+        if (isConnected)
         {
-            windowrect.x = Mathf.Clamp(windowrect.x, 0, Screen.width - windowrect.width);
-            windowrect.y = Mathf.Clamp(windowrect.y, 0, Screen.height - windowrect.height);
-
-            windowrect = GUI.Window(1, windowrect, ConnectionWindow, "Connection");
-
-            lobbyrect.x = Mathf.Clamp(lobbyrect.x, 0, Screen.width - lobbyrect.width);
-            lobbyrect.y = Mathf.Clamp(lobbyrect.y, 0, Screen.height - lobbyrect.height);
-
-            lobbyrect = GUI.Window(2, lobbyrect, LobbyWindow, "Lobby");
+			if (gm.gamephase == 0 || gm.isShowMenu && EnemyManager.isAlive)
+			{
+            	windowrect.x = Mathf.Clamp(windowrect.x, 0, Screen.width - windowrect.width);
+            	windowrect.y = Mathf.Clamp(windowrect.y, 0, Screen.height - windowrect.height);
+            	windowrect = GUI.Window(1, windowrect, ConnectionWindow, "Connection");
+			}
+			
+			if (!gm.isSoloPlay)
+			{
+            	lobbyrect.x = Mathf.Clamp(lobbyrect.x, 0, Screen.width - lobbyrect.width);
+            	lobbyrect.y = Mathf.Clamp(lobbyrect.y, 0, Screen.height - lobbyrect.height);
+            	lobbyrect = GUI.Window(2, lobbyrect, LobbyWindow, "Lobby");
+			}
         }
-		else {
-			if (gamephase >= 1)
-			if (GUI.Button(button, "Return to Lobby"))
-            Application.LoadLevel("mainscene");
+		if (!gm.isSoloPlay && gm.gamephase == 2 && !gm.isShowMenu)
+		{
+			if (EnemyManager.isAlive)
+			{
+				if (GUI.Button(button, "Change Settings"))
+				{
+					ToggleReady(false);
+					gm.isShowMenu = true;
+				}
+			}
+			else gm.isReady = true;
 		}
-
-        if (gamephase == 0)
+        if (gm.gamephase == 0 || gm.isSoloPlay || gm.gamephase == 3 || gm.isShowMenu)
         {
-			if (GUI.Button(button, "Return to Main"))
-            Application.LoadLevel("opening");
+			if (GUI.Button(button, "Quit Game"))
+			{
+				if (!gm.isSoloPlay)
+				{
+				    NetOutgoingMessage outmsg = client.CreateMessage();
+				    outmsg.Write((byte)PacketTypes.Disconnect);
+				    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered);
+					client.Shutdown(username+": Bye All");
+					print("Closing client connection...");
+				}
+            	Application.LoadLevel("opening");
+			}
 			
             int top = 5;
             foreach (string msg in console)
@@ -236,24 +303,55 @@ public class NetworkManager : MonoBehaviour {
         GUI.Label(new Rect(10, 175, 90, 25), "Battle Length");
         int newhealth = GUI.SelectionGrid(new Rect(10, 195, 180, 40), healthmod, new string[] { "Short", "Normal", "Long", "Absurd" }, 2);
 		
-		bool intro = GUI.Toggle(new Rect(100, 240, 100, 20), isPlayIntro, "Play Intro?");
-        bool ready = GUI.Toggle(new Rect(20, 240, 80, 20), isReady, "Ready?");
+		bool intro = gm.isPlayIntro;
+        bool ready = gm.isReady;
+		
+		if (gm.isShowMenu )//|| Players != null && Players.Count < numPlayers)
+		{
+			// More like a place holder...
+			// The client option to Join is not setup, as the Server will auto start the game for now
+			if (Players != null && Players.Count < numPlayers && gm.gamephase !=0)
+			{
+				gm.gamephase = 2;
+				
+				if (GUI.Button(new Rect(10, 255, 180, 30), "JOIN"))
+				{
+					gm.isShowMenu = false;
+					//SendStart();
+					ToggleReady(true);
+				}
+				
+			}
+			else if (GUI.Button(new Rect(10, 255, 180, 30), "RESUME"))
+			{
+				gm.isShowMenu = false;
+				//gm.gamephase = 2;
+				ready = true;
+			}
+		}
+		else {
+			ready = GUI.Toggle(new Rect(20, 240, 80, 20), gm.isReady, "Ready?");
+			intro = GUI.Toggle(new Rect(100, 240, 100, 20), gm.isPlayIntro,"Play Intro?");
+		
+		    if (!ready)
+		        GUI.enabled = false;
+		
+		    if (GUI.Button(new Rect(10, 265, 180, 30), "START"))
+				{
+					gm.isShowMenu = false;
+		        	SendStart();
+				}
 
-        if (!ready)
-            GUI.enabled = false;
-
-        if (GUI.Button(new Rect(10, 265, 180, 30), "START"))
-            SendStart();
-
-        GUI.enabled = true;
-
+        	GUI.enabled = true;
+		}
+		
         if (newdiff != difficulty || newhealth != healthmod)
             ChangeDifficulty(newdiff, newhealth);
 
-        if (ready != isReady)
+        if (ready != gm.isReady)
             ToggleReady(ready);
 		
-		if (intro != isPlayIntro)
+		if (intro != gm.isPlayIntro)
             TogglePlayIntro(intro);
 
         GUI.DragWindow();
@@ -277,7 +375,7 @@ public class NetworkManager : MonoBehaviour {
         else
             Player.dmgweakpoint += damage;
 
-        if (isSoloMode)
+        if (gm.isSoloPlay)
         {
             EnemyManager.CurrentHealth -= damage;
             return;
@@ -287,28 +385,29 @@ public class NetworkManager : MonoBehaviour {
         outmsg.Write((byte)PacketTypes.HurtTarget);
         outmsg.Write((Int16)damage);
         outmsg.Write(weakpoint);
-        client.SendMessage(outmsg, NetDeliveryMethod.Unreliable, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
     }
 
     public void SendPlayerSpecial(int SpecialType)
     {
-        if (isSoloMode)
+        if (gm.isSoloPlay)
             return;
 
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayerSpecial);
         outmsg.Write((Int16)SpecialType);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 2);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
     }
 
     public void SendPlayerUpdate(int id, float xvel, float yvel, bool firing)
     {
-        if (isSoloMode)
+        if (gm.isSoloPlay)
             return;
 
         PlayerObject player = Players.Find(p => p.Id == id);
-
-        NetOutgoingMessage outmsg = new NetOutgoingMessage();
+		if (player == null) return;
+        
+		NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayerAction);
         outmsg.Write(player.Obj.transform.position.x);
         outmsg.Write(player.Obj.transform.position.z);
@@ -317,9 +416,18 @@ public class NetworkManager : MonoBehaviour {
         outmsg.Write(firing);
         client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
     }
-
+		
+	public void SendKeepAlive() 
+	{
+		if (gm.isSoloPlay) return;
+		NetOutgoingMessage outmsg = new NetOutgoingMessage();
+		outmsg.Write((byte)PacketTypes.KeepAlive);
+		client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+	}
+	
     public void SendLobbyText(string msg)
     {
+		if (gm.isSoloPlay) return;
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.LobbyMessage);
         outmsg.Write(msg);
@@ -348,7 +456,7 @@ public class NetworkManager : MonoBehaviour {
 
     void StartSoloGame()
     {
-        Vector3 position = new Vector3(0f, 15f, -500f);
+        Vector3 position = new Vector3(0f, 15f, -400); // -500
 
         username = newname; //You only need to hit Set when playing multiplayer.
 
@@ -359,23 +467,24 @@ public class NetworkManager : MonoBehaviour {
         GameObject p = GameObject.Instantiate(Resources.Load("player"), position, Quaternion.identity) as GameObject;
 
         Players.Add(new PlayerObject(1, p, username));
-
-        Player = Players[0];
-
-        cb = new CrabBattleServer.CrabBehavior();
+		Player = Players[0];
+		
+		numPlayers = 1;
+        
+		cb = new CrabBattleServer.CrabBehavior();
 
         Debug.Log(username);
-
-        gamephase = 1; //Start game.
+		gm.gamephase = 1; //Start game.
     }
 
     public void SendStart()
     {
-        if (isSoloMode)
+        if (gm.isSoloPlay)
         {
             StartSoloGame();
             return;
         }
+		
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.StartGame);
         client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
@@ -385,8 +494,9 @@ public class NetworkManager : MonoBehaviour {
     {
         Player.hittaken += 1;
 
-        if (isSoloMode)
+        if (gm.isSoloPlay)
             return;
+		
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayerHit);
         client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
@@ -395,33 +505,36 @@ public class NetworkManager : MonoBehaviour {
     public void ToggleReady(bool ready)
     {
 		// no point in changing ready flag as there is only one player
-        if (isSoloMode)
+        if (gm.isSoloPlay)
             return;
 
-        isReady = ready;
-
-        NetOutgoingMessage outmsg = new NetOutgoingMessage();
-        outmsg.Write((byte)PacketTypes.Ready);
-        outmsg.Write(isReady);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 2);
+		if (gm.isReady != ready)
+		{
+	        NetOutgoingMessage outmsg = new NetOutgoingMessage();
+	        outmsg.Write((byte)PacketTypes.Ready);
+	        outmsg.Write(ready);
+	        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+		}
+		
+		gm.isReady = ready;
     }
 	
 	public void TogglePlayIntro(bool intro)
     {
-        isPlayIntro = intro;
+        gm.isPlayIntro = intro;
 		
-		if (isSoloMode)
+		if (gm.isSoloPlay)
             return;
 
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayIntro);
-        outmsg.Write(isPlayIntro);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 2);
+        outmsg.Write(gm.isPlayIntro);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
     }
 
     public void ChangeDifficulty(int newdiff, int newhealth)
     {
-        if (isSoloMode)
+        if (gm.isSoloPlay)
         {
             difficulty = newdiff;
             healthmod = newhealth;
@@ -437,12 +550,12 @@ public class NetworkManager : MonoBehaviour {
         outmsg.Write((byte)PacketTypes.SettingsChange);
         outmsg.Write((Int16)difficulty);
         outmsg.Write((Int16)healthmod);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 2);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
     }
 
     public void ChangeName(string name)
     {
-        if (isSoloMode)
+        if (gm.isSoloPlay)
             return;
 
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
@@ -455,9 +568,9 @@ public class NetworkManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
     {
-        if (isSoloMode)
+        if (gm.isSoloPlay)
         {
-            if(gamephase == 2)
+            if(gm.gamephase == 2)
                 cb.GoGoBattleCrab(Time.time, Time.deltaTime);
             return; //Don't do any of the net management stuff if we're solo.
         }
@@ -470,16 +583,29 @@ public class NetworkManager : MonoBehaviour {
                     {
                         switch (inc.ReadByte())
                         {
+							case (byte)PacketTypes.StartGame:
+                                {
+									// Server sent go ahead to auto start
+									ToggleReady(true);
+									gm.gamephase = 1;
+									print("Received ok to start game intro");	
+								}
+								break;
 							case (byte)PacketTypes.PlayIntro:
                                 {
-									isPlayIntro = inc.ReadBoolean();
-                                    AddConsoleMessage("isPlayIntro "+isPlayIntro);
-									Debug.Log("isPlayIntro "+isPlayIntro);
+									gm.isPlayIntro = inc.ReadBoolean();
+                                    AddConsoleMessage("isPlayIntro "+gm.isPlayIntro);
+									Debug.Log("isPlayIntro "+gm.isPlayIntro);
                                 }
                                 break;
                             case (byte)PacketTypes.Message:
                                 {
                                     AddConsoleMessage(inc.ReadString());
+                                }
+                                break;
+							case (byte)PacketTypes.MessageDebug:
+                                {
+                                    print(inc.ReadString());
                                 }
                                 break;
                             case (byte)PacketTypes.LobbyMessage:
@@ -500,6 +626,7 @@ public class NetworkManager : MonoBehaviour {
                                     healthmod = inc.ReadInt16();
                                     Debug.Log("Difficulty: "+difficulty + " Battle Length: " + healthmod);
                                     AddConsoleMessage("Game difficulty: "+difficulty + " Battle Length: " + healthmod);
+									EnemyManager.CalculateHealth();
                                 }
                                 break;
                             case (byte)PacketTypes.AssignId:
@@ -519,7 +646,7 @@ public class NetworkManager : MonoBehaviour {
                                     }
 
                                     isConnected = true;
-                                    lastBeat = Time.time;
+                                    //lastBeat = Time.time;
 
                                     AddConsoleMessage("Server assigned you an id of " + ClientId + ".");
                                 }
@@ -527,36 +654,44 @@ public class NetworkManager : MonoBehaviour {
                             case (byte)PacketTypes.AddPlayer:
                                 {
                                     int playerid = inc.ReadInt16();
+									print("Got ID "+playerid);
                                     float x = inc.ReadFloat();
                                     float y = inc.ReadFloat();
                                     string name = inc.ReadString();
                                     Vector3 position = new Vector3(x, 15, y);
                                     Debug.Log("Adding player " + playerid + " to scene.");
-                                    GameObject p;
+					
+									if (Players.Exists(play => play.Id == playerid)) return;
+                                    
+									GameObject p;
                                     if (playerid == ClientId)
                                     {
-                                        //Debug.Log(position);
+                                        //Debug.Log("YOU");
                                         p = GameObject.Instantiate(Resources.Load("player"), position, Quaternion.identity) as GameObject;
                                         Player = new PlayerObject(playerid, p, name);
+										Players.Add(Player);
+										
+										Enemy.animation.Play("laying");
+										lastSec=Time.time;
                                     }
-                                    else
+                                    else {
+										//Debug.Log("THEM");
                                         p = GameObject.Instantiate(Resources.Load("ally"), position, Quaternion.identity) as GameObject;
-
-                                    Players.Add(new PlayerObject(playerid, p, name));
-
-                                    if (Players.Count >= numPlayers)  //Lets hope it isn't ever larger.
-                                        gamephase = 1;  //We have all our players, goooooo
+										Players.Add(new PlayerObject(playerid, p, name));
+										}  
                                 }
                                 break;
 							case (byte)PacketTypes.RemovePlayer:
                                 {
-									if (gamephase==0) break;
-                                    int playerid = inc.ReadInt16();
-                                    Debug.Log("Player " + playerid + " had disconnected");
+									int playerid = inc.ReadInt16();
+									//if (gm.gamephase == 0) break;
+                                   
 									PlayerObject player = Players.Find(p => p.Id == playerid);
+									if (player==null) break;
+									Debug.Log("Player " + player.Name+" ("+playerid+") had disconnected");
+									PlayerController pc = player.Obj.GetComponent<PlayerController>();
 									bool status = Players.Remove(player);
 									Debug.Log("Removing player " + playerid +" "+status);
-									PlayerController pc = player.Obj.GetComponent<PlayerController>();
 									Destroy(pc.playername);
 									Destroy(player.Obj);
                                 }
@@ -578,9 +713,9 @@ public class NetworkManager : MonoBehaviour {
                                     }
                                     outmsg.Write((float)Enemy.transform.position.x);
                                     outmsg.Write((float)Enemy.transform.position.z);
-                                    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 0);
+                                    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 0);//0
                                     //AddConsoleMessage("Client responded to a server sync message.");
-                                    lastBeat = Time.time;
+                                    //lastBeat = Time.time;
 
                                     roundtriptime = inc.ReadFloat();
                                 }
@@ -649,12 +784,12 @@ public class NetworkManager : MonoBehaviour {
                                 {
                                     int playerid = inc.ReadInt16();
 
-                                    if (Player.Id == playerid)
+                                    if (Player==null||Player.Id == playerid)
                                         break;
 
                                     PlayerObject player = Players.Find(p => p.Id == playerid);
-
-                                    GameObject.Instantiate(Resources.Load("Detonator-Insanity"), player.Obj.transform.position, Quaternion.identity);
+									if (player!=null)
+                                    	GameObject.Instantiate(Resources.Load("Detonator-Insanity"), player.Obj.transform.position, Quaternion.identity);
                                 }
                                 break;
                             default:
@@ -669,36 +804,75 @@ public class NetworkManager : MonoBehaviour {
                     break;
             }
         }
-
+		
+		if (Time.time > lastSec+1) 
+		{
+			lastSec=Time.time;
+			SendKeepAlive();
+			
+			if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
+			{
+				AddLobbyMessage("Lost connection to server. Attempting to reconnect...");
+				NetOutgoingMessage outmsg = new NetOutgoingMessage();
+				outmsg.Write("A Client");
+				
+				IPAddress addr = (Dns.GetHostEntry(hostIp)).AddressList[0];
+				IPEndPoint ip = new IPEndPoint(addr,gm.gamePort);
+				NetConnection nc = client.GetConnection(ip);
+				
+				if (nc !=null)
+				{
+					isConnected = false;
+                	gm.isReady = false;
+					client.AcceptConnection(nc);
+					AddConsoleMessage("Lost connection to server. Attempting to reconnect...");
+					print("KeepAlive: Reconnecting to server...");
+				}
+				else 
+				{
+					client.Connect(hostIp, gm.gamePort, outmsg);
+					if (gm.gamephase == (int) GameState.InGame)
+					{
+						gm.isShowMenu = false;
+						gm.gamephase = 0;
+						ToggleReady(false);
+						Application.LoadLevel("mainscene");
+					}
+					else 
+					{
+						ToggleReady(false);
+						AddConsoleMessage("Attempting to connect to the server...");
+					}
+				}
+			}
+		}
+		/*
         if ((lastBeat + 10 < Time.time) || (lastBeat + 4 < Time.time && !isConnected))
         {
             if (isConnected)
             {
                 AddConsoleMessage("Lost connection to server.  Attempting to reconnect...");
                 isConnected = false;
-                isReady = false;
+                gm.isReady = false;
             }
             else
+			{
                 AddConsoleMessage("Attempting to connect to the server...");
 
-            NetOutgoingMessage outmsg = new NetOutgoingMessage();
-            outmsg.Write("A Client");
-
-            client.Connect(hostIp, 14248, outmsg);
+		        NetOutgoingMessage outmsg = new NetOutgoingMessage();
+		        outmsg.Write("A Client");
+			
+				print("Update: Reconnecting to server...");
+            	client.Connect(hostIp, gm.gamePort, outmsg);
+			}
 
             lastBeat = Time.time;
         }
+        */	
 	}
 
     public void OnApplicationQuit()
     {
-        if (!isSoloMode)
-        {
-            NetOutgoingMessage outmsg = client.CreateMessage();
-            outmsg.Write((byte)PacketTypes.Disconnect);
-            client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered);
-			client.Shutdown("Bye All");
-			print("Closing client connection...");
-        }
+		Shutdown();
     }
 }

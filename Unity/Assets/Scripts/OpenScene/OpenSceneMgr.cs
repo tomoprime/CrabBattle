@@ -7,26 +7,27 @@ public class OpenSceneMgr : MonoBehaviour {
     GameManager gm;
 
     Rect windowrect;
-
-    // Use this for initialization
+	
     void Start () 
     {
-        gm = GameManager.GetInstance();
-
-        windowrect = new Rect(Screen.width / 2f - 150f, Screen.height / 2f - 150f, 300f, 375f);
+		gm = GameManager.GetInstance();
+        windowrect = new Rect(Screen.width / 2f - 150f, Screen.height / 2f - 160f, 300f, 375f);
+		gm.Reset();
     }
 
     public void OnGUI()
     {
         windowrect.x = Mathf.Clamp(windowrect.x, 0, Screen.width - windowrect.width);
         windowrect.y = Mathf.Clamp(windowrect.y, 0, Screen.height - windowrect.height);
-
         windowrect = GUI.Window(1, windowrect, OptionWindow, "Game Type");
     }
 
     public void OptionWindow(int windowid)
     {
-        GUI.Label(new Rect(20, 30, 200, 20), "Single Player");
+		GUI.Label(new Rect(20, 30, 110, 25), "User Name:");
+        gm.username = GUI.TextField(new Rect(100, 30, 150, 20), gm.username, 20);
+		
+        //GUI.Label(new Rect(20, 30, 200, 20), "Single Player");
 
         if (GUI.Button(new Rect(20, 60, 260, 30), "Play Single Player"))
         {
@@ -35,8 +36,8 @@ public class OpenSceneMgr : MonoBehaviour {
         }
 
         GUI.Label(new Rect(20, 100, 250, 20), "MultiPlayer instructions for your own host:");
-
-        GUI.Label(new Rect(30, 125, 260, 125), gm.greeting);
+        GUI.Label(new Rect(30, 125, 260, 130), gm.greeting);
+		
         if (GUI.Button(new Rect(190, 240, 90, 20), "Get Source"))
         {
 			Application.OpenURL(gm.downloadServerUrl);
@@ -49,6 +50,7 @@ public class OpenSceneMgr : MonoBehaviour {
         if (GUI.Button(new Rect(20, 300, 260, 30), "Play Multi Player"))
         {
             gm.isSoloPlay = false;
+# if UNITY_WEBPLAYER
 			bool isPolicyConnected = false;
 			string hostname = gm.ipAddress;
 			IPAddress[] ips = Dns.GetHostAddresses(gm.ipAddress);
@@ -62,8 +64,10 @@ public class OpenSceneMgr : MonoBehaviour {
             if(isPolicyConnected)
 				Application.LoadLevel("mainscene");
 			else gm.ipAddress=hostname;
+# else
+			Application.LoadLevel("mainscene");
+#endif
         }
-
         GUI.DragWindow();
     }
 }

@@ -28,7 +28,7 @@ public class EnemySpawnShotProjectile : MonoBehaviour {
     {
         spawnshot = Resources.Load("Bullets/EnemySmallShot");
 
-        NetworkManager Netman = NetworkManager.GetInstance();
+        NetworkManager Netman = NetworkManager.Instance;//GetInstance();
         Enemy = Netman.Enemy;
         if (Netman.difficulty == 0)
         {
@@ -62,7 +62,7 @@ public class EnemySpawnShotProjectile : MonoBehaviour {
             yield return new WaitForEndOfFrame();
         }
 
-        int bulletstomake = NetworkManager.GetInstance().difficulty +1;
+        int bulletstomake = NetworkManager.Instance.difficulty +1;//NetworkManager.GetInstance().difficulty +1;
         bulletstomake *= bulletstomake;
         float angle = 360 / (float)bulletstomake;
 
@@ -94,7 +94,7 @@ public class EnemySpawnShotProjectile : MonoBehaviour {
 
         if (splittime < 0 && !splitting && !dying)
         {
-            if (NetworkManager.GetInstance().difficulty == 0)
+            if (NetworkManager.Instance.difficulty == 0)//GetInstance().difficulty == 0)
                 StartCoroutine(FadeAway(2f));
             else
                 StartCoroutine(Split());

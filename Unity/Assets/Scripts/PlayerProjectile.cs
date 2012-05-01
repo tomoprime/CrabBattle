@@ -38,11 +38,11 @@ public class PlayerProjectile : MonoBehaviour {
             moving = false;
 
             if (other.tag == "Enemy")
-                NetworkManager.GetInstance().DealEnemyDamage(1, false);
+                NetworkManager.Instance.DealEnemyDamage(1, false);//GetInstance().DealEnemyDamage(1, false);
 
             if (other.tag == "WeakSpot")
             {
-                NetworkManager netman = NetworkManager.GetInstance();
+                NetworkManager netman = NetworkManager.Instance;//GetInstance();
 
                 netman.DealEnemyDamage(5, true);
                 netman.EnemyManager.HitWeakpoint();

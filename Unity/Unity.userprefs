@@ -7,8 +7,9 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Assets" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="OpenScene" expanded="True" />
-                <Node name="CameraController.cs" selected="True" />
+                <Node name="OpenScene" expanded="True">
+                  <Node name="OpenSceneMgr.cs" selected="True" />
+                </Node>
               </Node>
             </Node>
           </Node>

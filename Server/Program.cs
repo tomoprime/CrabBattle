@@ -42,7 +42,7 @@ namespace CrabBattleServer
 			
 			Console.WriteLine("\n Hit 'ESC' to stop service.");
 			while (!Console.KeyAvailable || Console.ReadKey().Key != ConsoleKey.Escape)
-				Thread.Sleep(50);
+				Thread.Sleep(500);
 			
 			policyServer.Stop();
 			gs.StopServer();

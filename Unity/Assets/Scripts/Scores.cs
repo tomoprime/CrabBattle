@@ -6,19 +6,19 @@ public class Scores : MonoBehaviour {
 	GameManager gm;
     public Font f;
 	NetworkManager netman;
-
+	/*
     Rect button;
-
+	
     void OnGUI()
     {
         if (GUI.Button(button, "Return to Menu"))
             Application.LoadLevel(0);
     }
-
+	 */
     // Use this for initialization
     void Start () 
     {
-        netman = NetworkManager.GetInstance();
+        netman = NetworkManager.Instance;//GetInstance();
 		gm = GameManager.GetInstance();
 		
 		int count = netman.Players.Count;
@@ -29,7 +29,7 @@ public class Scores : MonoBehaviour {
         int offy = (Screen.height - height) / 2;
 		
 		//button = new Rect(Screen.width / 2 - 100, Screen.height / 4 * 3 - 25, 200, 50);
-        button = new Rect(offx+5, offy+5, 200, 50);
+        //button = new Rect(offx+5, offy+5, 200, 50);
 
         GameObject scorebg = GameObject.Instantiate(Resources.Load("ScoreBackground")) as GameObject;
 
@@ -45,10 +45,12 @@ public class Scores : MonoBehaviour {
 
         int mins = (int)Mathf.Floor(length / 60);
         int sec = (int)Mathf.Floor(length % 60);
-
+		print ("length "+length);
         string time;
-
-        if (sec < 10)
+		
+		if (length < 0)
+			time = "0:00";
+        else if (sec < 10)
             time = mins + ":0" + sec;
         else
             time = mins + ":" + sec;
@@ -70,7 +72,16 @@ public class Scores : MonoBehaviour {
             case 2: health = "Long"; break;
             case 3: health = "Absurd"; break;
         }
-
+		
+		if (length < 0)
+		{
+			CreateLabel(offx + 350, offy + 30,  30, "GAME OVER");
+        	CreateLabel(offx + 350, offy + 70,  14, "Game Time: " + time);
+        	CreateLabel(offx + 350, offy + 90,  14, "Difficulty: " + difficulty + "   Length: " + health);
+			CreateLabel(offx + 350, offy + 120, 12, "Sorry you are a little late joining this party.  8+)");
+			return;
+		}
+		
         CreateLabel(offx + 350, offy + 10, 20, "Scores");
         CreateLabel(offx + 350, offy + 30, 12, "Game Time: " + time);
         CreateLabel(offx + 350, offy + 45, 12, "Difficulty: " + difficulty + "   Length: " + health);
