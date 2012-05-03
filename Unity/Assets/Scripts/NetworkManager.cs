@@ -66,6 +66,21 @@ public class PlayerObject
     }
 }
 
+/*
+ * Created by TomoPrime
+ * 
+ * Added update for Sequence Channels
+ * 
+ * PacketTypes of:
+ * 0 - Message, LobbyMessage, MessageDebug are set to 0
+ * 1 - Mostly Server connect types are like: AssignID, AddPlayer, RemovePlayer, StartGame, Disconnect
+ * 2 - Player related types are like: PlayerHit, PlayerSpecial, PlayerAction
+ * 3 - Enemy types are like: EnemySync, EnemyHealth, EnemyAction
+ * 4 - Beat aka heartbeat probably will go away later on replaced by KeepAlive
+ * 5 - Mostly Game settings like: SettingsChange, PlayerIntro, Ready, UpdateName
+ * 6 - PlayerCount used to keep track of new joiners and leavers
+ */
+
 public sealed class NetworkManager : MonoBehaviour {
 	
 	private static volatile NetworkManager _instance;
@@ -159,7 +174,7 @@ public sealed class NetworkManager : MonoBehaviour {
         {
             NetOutgoingMessage outmsg = client.CreateMessage();
             outmsg.Write((byte)PacketTypes.Disconnect);
-            client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered);
+            client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
 			client.Shutdown(username+": Bye All");
 			print("Id"+ClientId+" Closing client connection...");
         }
@@ -252,7 +267,7 @@ public sealed class NetworkManager : MonoBehaviour {
 				{
 				    NetOutgoingMessage outmsg = client.CreateMessage();
 				    outmsg.Write((byte)PacketTypes.Disconnect);
-				    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered);
+				    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
 					client.Shutdown(username+": Bye All");
 					print("Closing client connection...");
 				}
@@ -327,6 +342,8 @@ public sealed class NetworkManager : MonoBehaviour {
 				gm.isShowMenu = false;
 				//gm.gamephase = 2;
 				ready = true;
+				if (newname != gm.username)
+					ChangeName(newname);
 			}
 		}
 		else {
@@ -358,10 +375,9 @@ public sealed class NetworkManager : MonoBehaviour {
 
         //If they hit enter while typing their name, send the changes to the server.
         if (Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "Namebox")
-            if (newname != username && newname != "")
+            if (newname != gm.username && newname != "")
             {
                 ChangeName(newname);
-                username = newname;
             }
     }
 
@@ -385,7 +401,7 @@ public sealed class NetworkManager : MonoBehaviour {
         outmsg.Write((byte)PacketTypes.HurtTarget);
         outmsg.Write((Int16)damage);
         outmsg.Write(weakpoint);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 3);
     }
 
     public void SendPlayerSpecial(int SpecialType)
@@ -396,7 +412,7 @@ public sealed class NetworkManager : MonoBehaviour {
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayerSpecial);
         outmsg.Write((Int16)SpecialType);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 2);
     }
 
     public void SendPlayerUpdate(int id, float xvel, float yvel, bool firing)
@@ -414,7 +430,7 @@ public sealed class NetworkManager : MonoBehaviour {
         outmsg.Write(xvel);
         outmsg.Write(yvel);
         outmsg.Write(firing);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 2);
     }
 		
 	public void SendKeepAlive() 
@@ -422,7 +438,7 @@ public sealed class NetworkManager : MonoBehaviour {
 		if (gm.isSoloPlay) return;
 		NetOutgoingMessage outmsg = new NetOutgoingMessage();
 		outmsg.Write((byte)PacketTypes.KeepAlive);
-		client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+		client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 4);
 	}
 	
     public void SendLobbyText(string msg)
@@ -431,7 +447,7 @@ public sealed class NetworkManager : MonoBehaviour {
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.LobbyMessage);
         outmsg.Write(msg);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 0);
     }
 
     public void AddLobbyMessage(string message)
@@ -485,6 +501,9 @@ public sealed class NetworkManager : MonoBehaviour {
             return;
         }
 		
+		if (newname != gm.username)
+			ChangeName(newname);
+		
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.StartGame);
         client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 1);
@@ -499,7 +518,7 @@ public sealed class NetworkManager : MonoBehaviour {
 		
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayerHit);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 2);
     }
 
     public void ToggleReady(bool ready)
@@ -513,7 +532,7 @@ public sealed class NetworkManager : MonoBehaviour {
 	        NetOutgoingMessage outmsg = new NetOutgoingMessage();
 	        outmsg.Write((byte)PacketTypes.Ready);
 	        outmsg.Write(ready);
-	        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+	        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 5);
 		}
 		
 		gm.isReady = ready;
@@ -529,7 +548,7 @@ public sealed class NetworkManager : MonoBehaviour {
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.PlayIntro);
         outmsg.Write(gm.isPlayIntro);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 5);
     }
 
     public void ChangeDifficulty(int newdiff, int newhealth)
@@ -550,7 +569,7 @@ public sealed class NetworkManager : MonoBehaviour {
         outmsg.Write((byte)PacketTypes.SettingsChange);
         outmsg.Write((Int16)difficulty);
         outmsg.Write((Int16)healthmod);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 5);
     }
 
     public void ChangeName(string name)
@@ -561,8 +580,9 @@ public sealed class NetworkManager : MonoBehaviour {
         NetOutgoingMessage outmsg = new NetOutgoingMessage();
         outmsg.Write((byte)PacketTypes.UpdateName);
         outmsg.Write(name);
-        client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, 0);
+        client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 5);
         AddConsoleMessage("Name change request sent to the server.");
+		gm.username = name;
     }
 	
 	// Update is called once per frame
@@ -588,6 +608,8 @@ public sealed class NetworkManager : MonoBehaviour {
 									// Server sent go ahead to auto start
 									ToggleReady(true);
 									gm.gamephase = 1;
+									if (newname != gm.username)
+										ChangeName(newname);
 									print("Received ok to start game intro");	
 								}
 								break;
@@ -631,35 +653,21 @@ public sealed class NetworkManager : MonoBehaviour {
                                 break;
                             case (byte)PacketTypes.AssignId:
                                 {
-                                    if (ClientId > 0 && username != "")
-                                    {
-                                        //We were previously connected before.  Re-submit our namechange request.
-                                        ChangeName(username);
-                                    }
-
                                     ClientId = inc.ReadInt32();
-                                    
-                                    if (username == "")
-                                    {
-                                        username = "Player " + ClientId;
-                                        newname = username;
-                                    }
 
                                     isConnected = true;
-                                    //lastBeat = Time.time;
-
                                     AddConsoleMessage("Server assigned you an id of " + ClientId + ".");
+									ChangeName(newname);
                                 }
                                 break;
                             case (byte)PacketTypes.AddPlayer:
                                 {
                                     int playerid = inc.ReadInt16();
-									print("Got ID "+playerid);
                                     float x = inc.ReadFloat();
                                     float y = inc.ReadFloat();
                                     string name = inc.ReadString();
                                     Vector3 position = new Vector3(x, 15, y);
-                                    Debug.Log("Adding player " + playerid + " to scene.");
+                                    Debug.Log("Adding player " +name+" ("+playerid+") to scene.");
 					
 									if (Players.Exists(play => play.Id == playerid)) return;
                                     
@@ -687,13 +695,29 @@ public sealed class NetworkManager : MonoBehaviour {
 									//if (gm.gamephase == 0) break;
                                    
 									PlayerObject player = Players.Find(p => p.Id == playerid);
-									if (player==null) break;
+									if (player == null) break;
 									Debug.Log("Player " + player.Name+" ("+playerid+") had disconnected");
 									PlayerController pc = player.Obj.GetComponent<PlayerController>();
 									bool status = Players.Remove(player);
 									Debug.Log("Removing player " + playerid +" "+status);
 									Destroy(pc.playername);
 									Destroy(player.Obj);
+                                }
+                                break;
+							case (byte)PacketTypes.UpdateName:
+                                {
+                                    //A Player changed their name. 
+                                    string namechange = inc.ReadString();
+									int playerid = inc.ReadInt16();
+                                    
+                                    //SendLobbyMessage("Server", player.Name + " (Id"+player.Id+") changed their name to '" + newname + "'.");
+									PlayerObject player = Players.Find(p => p.Id == playerid);
+									if (player == null) break;
+									Debug.Log(player.Name + " (Id"+playerid+") changed their name to '" + namechange + "'.");
+									player.Name = namechange;
+									var pn = player.Controller.playername;
+									if (pn == null) break;
+									pn.guiText.text = player.Name;
                                 }
                                 break;
                             case (byte)PacketTypes.Beat:
@@ -713,10 +737,7 @@ public sealed class NetworkManager : MonoBehaviour {
                                     }
                                     outmsg.Write((float)Enemy.transform.position.x);
                                     outmsg.Write((float)Enemy.transform.position.z);
-                                    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 0);//0
-                                    //AddConsoleMessage("Client responded to a server sync message.");
-                                    //lastBeat = Time.time;
-
+                                    client.SendMessage(outmsg, NetDeliveryMethod.ReliableOrdered, 4);
                                     roundtriptime = inc.ReadFloat();
                                 }
                                 break;
@@ -736,7 +757,7 @@ public sealed class NetworkManager : MonoBehaviour {
 
                                     int specialType = inc.ReadInt16();
 
-                                    Debug.Log("Got special action request for player " + playerid);
+                                    Debug.Log("Got special action request for player " + playerid + " ("+player.Name+")");
 
                                     if(playerid != ClientId)
                                         player.Controller.UseSpecial(specialType);

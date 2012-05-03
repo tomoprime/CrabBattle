@@ -7,7 +7,13 @@ This project was created to help people get a Client / Server Game going using <
 Let the games begin,<br>
 Tom Acunzo - aka <i>Tomoprime</i>
 
-<h3>Current build v1.1</h3>
+<h3>Current Build v1.2</h3>
+- Multiplayer 
+Added support for changing player name while in game. GUIText will get updated on other clients.
+Added Sequence Channel numbering grouped by message / packet types see GameServer.cs and NetworkManager.cs for additional notes.
+Fixed misc bugs. Clean up some warning messages.
+
+<h3>Build v1.1</h3>
 
 - Multiplayer 
 Added late joiner support to access a game already in play.

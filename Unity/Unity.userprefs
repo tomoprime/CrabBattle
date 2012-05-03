@@ -1,15 +1,24 @@
 ﻿<Properties GitUserInfo="UsingGIT">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/NetworkManager.cs">
+    <Files>
+      <File FileName="Assets/Scripts/NetworkManager.cs" Line="647" Column="60" />
+      <File FileName="Assets/Scripts/OpenScene/OpenSceneMgr.cs" Line="28" Column="53" />
+      <File FileName="Assets/Scripts/OpenScene/GameManager.cs" Line="10" Column="32" />
+      <File FileName="Assets/Scripts/CameraController.cs" Line="204" Column="6" />
+      <File FileName="Assets/Scripts/CrabBehavior.cs" Line="106" Column="1" />
+      <File FileName="Assets/Scripts/CrabManager.cs" Line="931" Column="18" />
+      <File FileName="Assets/Scripts/Scores.cs" Line="81" Column="80" />
+    </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Assets" expanded="True">
+              <Node name="3rdParty" expanded="True" />
               <Node name="Scripts" expanded="True">
-                <Node name="OpenScene" expanded="True">
-                  <Node name="OpenSceneMgr.cs" selected="True" />
-                </Node>
+                <Node name="OpenScene" expanded="True" />
+                <Node name="NetworkManager.cs" selected="True" />
               </Node>
             </Node>
           </Node>

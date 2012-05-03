@@ -77,6 +77,20 @@ class PlayerObject
     }
 }
 
+/*
+ * Created by TomoPrime
+ * 
+ * Added update for Sequence Channels
+ * 
+ * PacketTypes of:
+ * 0 - Message, MessageDebug are set to 0
+ * 1 - Mostly Server connect types are like: AssignID, AddPlayer, RemovePlayer, StartGame, Disconnect
+ * 2 - Player related types are like: PlayerHit, PlayerSpecial, PlayerAction
+ * 3 - Enemy types are like: EnemySync, EnemyHealth, EnemyAction
+ * 4 - Beat aka heartbeat probably will go away later on replaced by KeepAlive
+ * 5 - Mostly Game settings like: SettingsChange, PlayerIntro, Ready
+ * 6 - PlayerCount used to keep track of new joiners and leavers
+ */
 
 namespace CrabBattleServer
 { 
@@ -90,8 +104,8 @@ namespace CrabBattleServer
 		public static int healthMod = 1;
 		public int ticksPerSecond = 66;
 		private CrabBehavior crab;
-		private DateTime time, lastBeat, introtime;
-		private TimeSpan timetopass, beatrate, introlength;
+		private DateTime lastBeat, introtime;
+		private TimeSpan beatrate, introlength;
 		private double last15sec;
 		private bool playintro = true;
 		private volatile bool isRunning;
@@ -182,7 +196,6 @@ namespace CrabBattleServer
 					outmsg = server.CreateMessage();
 					outmsg.Write((byte)PacketTypes.Message);
 					outmsg.Write(player.Name+" attempted to start the game, but not all players are ready.");
-					//server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
 					server.SendToAll(outmsg, NetDeliveryMethod.ReliableOrdered);
 					SendLobbyMessage("Server", "Game cannot start until all users are ready.");
 					return;
@@ -212,7 +225,7 @@ namespace CrabBattleServer
 			        outmsg.Write(p.X);
 			        outmsg.Write(p.Y);
 			        outmsg.Write(p.Name);
-					server.SendMessage(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered,1);
+					server.SendMessage(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
 					
 					// Above sent data to current player. Below sends data to everyone else
 					outmsg = server.CreateMessage();
@@ -237,12 +250,12 @@ namespace CrabBattleServer
 	                    outmsg.Write(target.Y);
 	                    outmsg.Write(crab.Direction);
 	                    outmsg.Write(target.Connection.AverageRoundtripTime/2f); //Divide by 2 to get trip time.
-	                    server.SendMessage(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
+	                    server.SendMessage(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 3);
 						
 						outmsg = server.CreateMessage();
                         outmsg.Write((byte)PacketTypes.EnemyHealth);
                         outmsg.Write((Int16)crab.CurrentHealth);
-                        server.SendMessage(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
+                        server.SendMessage(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 3);
 					}
 				}
 				// Otherwise only send each person's data to the new joiner as the game is already running
@@ -284,11 +297,9 @@ namespace CrabBattleServer
 			else
 			    introlength = new TimeSpan(0, 0, 21);
 			    
-			timetopass = new TimeSpan(0,0,0,0,50);
 			beatrate = new TimeSpan(0, 0, 1);
 			
 			introtime = DateTime.Now;
-			time	 = DateTime.Now;
 			lastBeat = DateTime.Now;
 			
 			NetOutgoingMessage outmsg;
@@ -355,7 +366,7 @@ namespace CrabBattleServer
                         outmsg.Write((byte)PacketTypes.Beat);
                         outmsg.Write((Int16)beatnum);
                         outmsg.Write(p.Connection.AverageRoundtripTime/2f);
-                        server.SendMessage(outmsg, p.Connection, NetDeliveryMethod.ReliableOrdered, 1);
+                        server.SendMessage(outmsg, p.Connection, NetDeliveryMethod.ReliableOrdered, 4);
                     }
                     beatnum++;
                     lastBeat = DateTime.Now;
@@ -385,7 +396,7 @@ namespace CrabBattleServer
             outmsg.Write((Int16)actionId);
             outmsg.Write(speed);
             outmsg.Write((Int16)0f); //seed
-            server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+            server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 3);
         }
 		
 		public void SendMessageDebug(string message)
@@ -393,7 +404,7 @@ namespace CrabBattleServer
 			NetOutgoingMessage outmsg = server.CreateMessage();
 			outmsg.Write((byte)PacketTypes.MessageDebug);
 			outmsg.Write(message);
-			server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+			server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
 		}
 		
 		public void SendMessageDebug(string message, NetConnection singleConn)
@@ -401,7 +412,7 @@ namespace CrabBattleServer
 			NetOutgoingMessage outmsg = server.CreateMessage();
 			outmsg.Write((byte)PacketTypes.MessageDebug);
 			outmsg.Write(message);
-			server.SendMessage(outmsg, singleConn, NetDeliveryMethod.ReliableOrdered, 1);
+			server.SendMessage(outmsg, singleConn, NetDeliveryMethod.ReliableOrdered, 0);
 		}
 		
 		public void SendConsoleMessage(string message)
@@ -409,7 +420,7 @@ namespace CrabBattleServer
 			NetOutgoingMessage outmsg = server.CreateMessage();
 			outmsg.Write((byte)PacketTypes.Message);
 			outmsg.Write(message);
-			server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+			server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
 		}
 		
 		public void SendConsoleMessage(string message, NetConnection singleConn)
@@ -417,7 +428,7 @@ namespace CrabBattleServer
 			NetOutgoingMessage outmsg = server.CreateMessage();
 			outmsg.Write((byte)PacketTypes.Message);
 			outmsg.Write(message);
-			server.SendMessage(outmsg, singleConn, NetDeliveryMethod.ReliableOrdered, 1);
+			server.SendMessage(outmsg, singleConn, NetDeliveryMethod.ReliableOrdered, 0);
 		}
 		
         public void SendLobbyMessage(string username, string message)
@@ -427,7 +438,7 @@ namespace CrabBattleServer
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.LobbyMessage);
             outmsg.Write(msg);
-            server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+            server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
         }
 		
 		public void SendLobbyMessage(string username, string message, NetConnection singleConn)
@@ -437,7 +448,7 @@ namespace CrabBattleServer
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.LobbyMessage);
             outmsg.Write(msg);
-            server.SendMessage(outmsg, singleConn, NetDeliveryMethod.ReliableOrdered, 1);
+            server.SendMessage(outmsg, singleConn, NetDeliveryMethod.ReliableOrdered, 0);
         }
 		
 		public void AddNewPlayer(NetIncomingMessage inc)
@@ -453,7 +464,7 @@ namespace CrabBattleServer
 			outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.Message);
             outmsg.Write("You are now connected to CrabBattle Server.");
-            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
+            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 0);
 			
             // Assign Id number to client
             outmsg = server.CreateMessage();
@@ -467,7 +478,7 @@ namespace CrabBattleServer
 			if(gamePhase == (int)GameState.InGame || gamePhase == (int)GameState.Intro)
 				outmsg.Write(false);
 			else outmsg.Write(playintro);
-            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
+            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 5);
 	
             //Send difficulty settings to the new player
             Console.WriteLine("Game diffculty :"+gameDifficulty + " Battle Length:" + healthMod);
@@ -475,20 +486,19 @@ namespace CrabBattleServer
             outmsg.Write((byte)PacketTypes.SettingsChange);
             outmsg.Write((Int16)gameDifficulty);
             outmsg.Write((Int16)healthMod);
-            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 1);
+            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 5);
 			
 			//Send the current playercount to current player (yes sending all isn't enough for new player)
             outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.PlayerCount);
             outmsg.Write((Int16)players.Count);
-            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered,1);
+            server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 6);
 			
 			//Send the current playercount to all but current player
             outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.PlayerCount);
             outmsg.Write((Int16)players.Count); 
-			server.SendToAll(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered,1);
-			//server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered,1);
+			server.SendToAll(outmsg,inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 6);
 		}
 		
 		public void HandleMessages(object fromPlayer)
@@ -544,7 +554,7 @@ namespace CrabBattleServer
                                     outmsg.Write((byte)PacketTypes.SettingsChange);
                                     outmsg.Write((Int16)gameDifficulty);
                                     outmsg.Write((Int16)healthMod);
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 5);
                                 }
                                 break;
 							case PacketTypes.KeepAlive:
@@ -583,7 +593,7 @@ namespace CrabBattleServer
                                         outmsg.Write(player.Y);
                                         outmsg.Write(crab.Direction);
                                         outmsg.Write(player.Connection.AverageRoundtripTime/2f); //Divide by 2 to get trip time.
-                                        server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+                                        server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 3);
                                     }
                                 }
                                 break;
@@ -607,6 +617,7 @@ namespace CrabBattleServer
 										outmsg = server.CreateMessage();
 									    outmsg.Write((byte)PacketTypes.PlayIntro);
 										outmsg.Write(false);
+										server.SendMessage(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 5);
 										break;
 									}
                                     //Player changed the status of Play Intro
@@ -624,7 +635,7 @@ namespace CrabBattleServer
 									outmsg = server.CreateMessage();
                                     outmsg.Write((byte)PacketTypes.PlayIntro);
 									outmsg.Write(playintro);
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 5);
                                 }
                                 break;
                             case PacketTypes.UpdateName:
@@ -634,8 +645,14 @@ namespace CrabBattleServer
                                     string newname = inmsg.ReadString();
                                     Console.WriteLine(player.Name + " (Id"+player.Id+") changed their name to '" + newname + "'.");
                                     SendLobbyMessage("Server", player.Name + " (Id"+player.Id+") changed their name to '" + newname + "'.");
-
                                     player.Name = newname;
+									
+									// let all other clients know that player changed his/her name
+									outmsg = server.CreateMessage();
+                                    outmsg.Write((byte)PacketTypes.UpdateName);
+									outmsg.Write(player.Name);
+									outmsg.Write(player.Id);
+									server.SendToAll(outmsg, inmsg.SenderConnection, NetDeliveryMethod.ReliableOrdered, 5);
                                 }
                                 break;
                             case PacketTypes.Disconnect:
@@ -653,7 +670,7 @@ namespace CrabBattleServer
                                     outmsg = server.CreateMessage();
                                     outmsg.Write((byte)PacketTypes.PlayerCount);
                                     outmsg.Write((Int16)players.Count);
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 6);
                                 }
                                 break;
                             case PacketTypes.StartGame:
@@ -669,7 +686,7 @@ namespace CrabBattleServer
                                     outmsg.Write((byte)PacketTypes.PlayerSpecial);
                                     outmsg.Write((Int16)player.Id);
                                     outmsg.Write((Int16)shottype);
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 2);
                                     //Console.WriteLine("Relaying Special Action Message for " + player.Name + ".");
                                 }
                                 break;
@@ -696,7 +713,7 @@ namespace CrabBattleServer
                                     outmsg.Write(player.VelocityY);
                                     outmsg.Write(player.Firing);
                                     outmsg.Write(player.Connection.AverageRoundtripTime/2f); //Not an exact science, but we'll use this to predict their position.
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 2);
 
                                     //Console.WriteLine("Relaying Action Message for " + player.Name + ". "+player.VelocityX + " " + player.VelocityY);
                                 }
@@ -716,7 +733,7 @@ namespace CrabBattleServer
                                     outmsg = server.CreateMessage();
                                     outmsg.Write((byte)PacketTypes.EnemyHealth);
                                     outmsg.Write((Int16)crab.CurrentHealth);
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 3);
                                 }
                                 break;
                             case PacketTypes.PlayerHit:
@@ -726,7 +743,7 @@ namespace CrabBattleServer
                                     outmsg = server.CreateMessage();
                                     outmsg.Write((byte)PacketTypes.PlayerHit);
                                     outmsg.Write((Int16)player.Id);
-                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
+                                    server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 2);
                                 }
                                 break;
                         }
@@ -754,7 +771,7 @@ namespace CrabBattleServer
 	                            outmsg = server.CreateMessage();
 	                            outmsg.Write((byte)PacketTypes.PlayerCount);
 	                            outmsg.Write((Int16)players.Count);
-	                            server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 1);
+	                            server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableOrdered, 6);
 	                        }
                             Console.WriteLine(player.Name + " (Id"+player.Id+") status changed to "+status+" (" + reason + ") "+players.Count);
                         }
@@ -762,7 +779,6 @@ namespace CrabBattleServer
                     default:
                         break;
             }
-	//		server.Recycle(inmsg);
         }
 	}
 }
