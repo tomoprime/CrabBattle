@@ -11,7 +11,7 @@ Tom Acunzo - aka <i>Tomoprime</i>
 - Multiplayer 
 Added support for changing player name while in game. GUIText will get updated on other clients.
 Added Sequence Channel numbering grouped by message / packet types see GameServer.cs and NetworkManager.cs for additional notes.
-Fixed misc bugs. Clean up some warning messages.
+- Fixed misc bugs. Clean up some warning messages.
 
 <h3>Build v1.1</h3>
 
